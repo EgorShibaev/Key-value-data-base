@@ -23,4 +23,18 @@ class TestEncryptDecipher {
 		val key = "some long key abcdef"
 		assertEquals(text, decipher(encrypt(text, key), key))
 	}
+
+	@Test
+	fun test4() {
+		val text = "short text"
+		val key = "this key is longer that text"
+		assertEquals(text, decipher(encrypt(text, key), key))
+	}
+
+	@Test
+	fun test5() {
+		val text = ""
+		val key = "key"
+		assertEquals(text, decipher(encrypt(text, key), key))
+	}
 }

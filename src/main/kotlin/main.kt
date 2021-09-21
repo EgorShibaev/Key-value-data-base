@@ -62,9 +62,32 @@ fun processEraseCommand(cont: MutableMap<String, String>, command: List<String>)
 	}
 }
 
+fun askKeyFromUser(): String {
+	print("Key word:")
+	return readLine()!!
+}
+
+fun greeting(): MutableMap<String, String> {
+	println("Hello!!!")
+	print("Do you want to continue work with database or start with empty database?[Continue/Start]")
+	var answer = readLine()!!
+	while (answer !in listOf("Continue", "Start")){
+		println("Choose from two option(Continue/Start)")
+		answer = readLine()!!
+	}
+	return if (answer == "Continue") {
+		readBase(askKeyFromUser()).toMutableMap()
+	}
+	else {
+		writeToBase(mapOf(), "K")
+		mutableMapOf()
+	}
+}
+
 fun workingProcess() {
-	val cont = readBase2().toMutableMap()
-	while (true) {
+	val cont = greeting()
+	var exit = false
+	while (!exit) {
 		print("write your command:")
 		val command = parseCommand(readLine())
 		if (command == null) {
@@ -93,14 +116,13 @@ fun workingProcess() {
 				}
 			}
 			"save" -> {
-				writeToBase2(cont)
+				writeToBase(cont, askKeyFromUser())
 				println("Done")
 			}
-			"exit" -> break
+			"exit" -> exit = true
 			else -> println("Incorrect command")
 		}
 	}
-	writeToBase2(cont)
 }
 
 fun main() {
@@ -108,14 +130,12 @@ fun main() {
 		workingProcess()
 	} catch (e: FileNotFoundException) {
 		println(e.message)
-		return
 	} catch (e: IndexOutOfBoundsException) {
 		println("database is damaged. Do you want to clear database?[Y/N]")
 		val answer = readLine()!!
 		if (answer == "Y") {
-			writeToBase2(mapOf())
+			writeToBase(mapOf(), "K")
 			println("Done")
 		}
-		return
 	}
 }
