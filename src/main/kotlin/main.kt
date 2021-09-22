@@ -56,8 +56,12 @@ fun processEraseCommand(cont: MutableMap<String, String>, command: List<String>)
 	else -> when {
 		command.size != 2 -> println("Incorrect command")
 		else -> {
-			cont.minusAssign(cont.keys.filter { it.matches(command[1].toRegex()) })
-			println("Done")
+			try {
+				cont.minusAssign(cont.keys.filter { it.matches(command[1].toRegex()) })
+				println("Done")
+			} catch (e: PatternSyntaxException) {
+				println("Error: ${e.message}")
+			}
 		}
 	}
 }
@@ -71,21 +75,19 @@ fun greeting(): MutableMap<String, String> {
 	println("Hello!!!")
 	print("Do you want to continue work with database or start with empty database?[Continue/Start]")
 	var answer = readLine()!!
-	while (answer !in listOf("Continue", "Start")){
+	while (answer !in listOf("Continue", "Start")) {
 		println("Choose from two option(Continue/Start)")
 		answer = readLine()!!
 	}
 	return if (answer == "Continue") {
 		readBase(askKeyFromUser()).toMutableMap()
-	}
-	else {
+	} else {
 		writeToBase(mapOf(), "K")
 		mutableMapOf()
 	}
 }
 
-fun workingProcess() {
-	val cont = greeting()
+fun workingProcess(cont: MutableMap<String, String>): MutableMap<String, String> {
 	var exit = false
 	while (!exit) {
 		print("write your command:")
@@ -123,11 +125,12 @@ fun workingProcess() {
 			else -> println("Incorrect command")
 		}
 	}
+	return cont
 }
 
 fun main() {
 	try {
-		workingProcess()
+		workingProcess(greeting())
 	} catch (e: FileNotFoundException) {
 		println(e.message)
 	} catch (e: IndexOutOfBoundsException) {
