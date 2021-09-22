@@ -9,35 +9,35 @@ import kotlin.test.assertEquals
 class TestEncryptDecipher {
 
 	@Test
-	fun test1() {
+	fun testSomeText() {
 		val text = "some text is here"
 		val key = "key"
 		assertEquals(text, decipher(encrypt(text, key), key))
 	}
 
 	@Test
-	fun test2() {
+	fun testTextInSeveralLines() {
 		val text = "text\n with\n few lines\n "
 		val key = "KEY"
 		assertEquals(text, decipher(encrypt(text, key), key))
 	}
 
 	@Test
-	fun test3() {
+	fun testLongText() {
 		val text = "one  two three for     five \n six seven     eight\n"
 		val key = "some long key abcdef"
 		assertEquals(text, decipher(encrypt(text, key), key))
 	}
 
 	@Test
-	fun test4() {
+	fun testLongKey() {
 		val text = "short text"
 		val key = "this key is longer that text"
 		assertEquals(text, decipher(encrypt(text, key), key))
 	}
 
 	@Test
-	fun test5() {
+	fun testEmptyText() {
 		val text = ""
 		val key = "key"
 		assertEquals(text, decipher(encrypt(text, key), key))
@@ -65,26 +65,56 @@ class TestWorkingProcess {
 	fun testContent() {
 		val cont = mutableMapOf("a" to "b", "c" to "b")
 		val output = executeCommand(cont, "content")
-		assertEquals(output, "a -> b\nc -> b\n")
+		assertEquals("a -> b\nc -> b\n", output)
 	}
 
 	@Test
 	fun testFind() {
 		val cont = mutableMapOf("a" to "b", "c" to "b", "key" to "value")
-		val output = executeCommand(cont, "find 'a'\nfindRegex '.'")
-		assertEquals(output, "b\na -> b\nc -> b\n")
+		val output = executeCommand(cont, "find a\nfindRegex .")
+		assertEquals("b\na -> b\nc -> b\n", output)
 	}
 
 	@Test
 	fun testSet() {
 		val cont = mutableMapOf("a" to "b", "c" to "b")
-		val output = executeCommand(cont, "set 'new key' 'new value'\nfind 'new key'")
-		assertEquals(output, "Done\nnew value\n")
+		val output = executeCommand(cont, "set new key -> new value\nfind new key")
+		assertEquals("Done\nnew value\n", output)
+	}
+
+	@Test
+	fun testErase() {
+		val cont = mutableMapOf("a" to "b", "c" to "b")
+		val output = executeCommand(cont, "erase a\ncontent")
+		assertEquals("Done\nc -> b\n", output)
+	}
+
+	@Test
+	fun testEraseRegex() {
+		val cont = mutableMapOf("a" to "b", "aa" to "b", "aaa" to "b")
+		val output = executeCommand(cont, "eraseRegex a{2,}\ncontent")
+		assertEquals("Done\na -> b\n", output)
+	}
+
+	@Test
+	fun testClear() {
+		val cont = mutableMapOf("a" to "b", "aa" to "b")
+		val output = executeCommand(cont, "content\nclear\ncontent")
+		assertEquals("a -> b\naa -> b\nDone\nBase is empty\n", output)
+	}
+
+	@Test
+	fun testManyCommands() {
+		val cont = mutableMapOf<String, String>()
+		val commands = "set a -> b\nset c -> long value\ncontent\nset ac -> bb\nfindRegex ."
+		val output = executeCommand(cont, commands)
+		assertEquals("Done\nDone\na -> b\nc -> long value\nDone\na -> b\nc -> long value\n", output)
 	}
 
 	private fun executeCommand(cont: MutableMap<String, String>, commands: String): String {
 		System.setIn(ByteArrayInputStream(("$commands\nexit\n").toByteArray()))
 		workingProcess(cont)
-		return stream.toString().trim().replace("write your command:".toRegex(), "")
+		return stream.toString().trim()
+			.replace("write your command:".toRegex(), "").replace("\r", "")
 	}
 }
