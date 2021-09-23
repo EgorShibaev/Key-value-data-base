@@ -32,6 +32,8 @@ fun reverseSortPermutation(key: String): List<Int> {
 }
 
 fun decipher(text: String, key: String): String {
+	if (text.length % key.length != 0)
+		throw IllegalAccessError()
 	val rows = key.length
 	val columns = text.length / rows + 1
 	val table = key.map { (listOf(it) + List(columns - 1) { 0.toChar() }).toMutableList() }
@@ -58,14 +60,15 @@ fun decipher(text: String, key: String): String {
 }
 
 fun readBase(key: String): Map<String, String> {
-	val lines = decipher(File("database").readText(), key).split('\n')
+	val text = decipher(File("database").readText(), key)
+	val lines = if (text.isNotEmpty()) text.split('\n') else listOf()
 	val result = mutableMapOf<String, String>()
 	for (i in lines.indices step 2)
 		result[lines[i]] = lines[i + 1]
 	return result
 }
 
-fun writeToBase(lines: Map<String, String>, key : String) {
+fun writeToBase(lines: Map<String, String>, key: String) {
 	val text = encrypt(lines.flatMap { listOf(it.key, it.value) }.joinToString(separator = "\n"), key)
 	File("database").writeText(text)
 }

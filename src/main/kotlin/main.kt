@@ -2,7 +2,7 @@ import java.io.FileNotFoundException
 import java.util.regex.PatternSyntaxException
 
 enum class Command {
-	CONTENT, SET, FIND, FINDREGEX, ERASE, ERASEREGEX, EXIT, SAVE, CLEAR
+	CONTENT, INSERT, UPDATE, FIND, FINDREGEX, ERASE, ERASEREGEX, EXIT, SAVE, CLEAR
 }
 
 fun parseCommand(text: String?): Pair<Command, List<String>>? {
@@ -10,7 +10,8 @@ fun parseCommand(text: String?): Pair<Command, List<String>>? {
 		return null
 	val command = when (text.split(' ').first()) {
 		"content" -> Command.CONTENT
-		"set" -> Command.SET
+		"insert" -> Command.INSERT
+		"update" -> Command.UPDATE
 		"find" -> Command.FIND
 		"findRegex" -> Command.FINDREGEX
 		"erase" -> Command.ERASE
@@ -21,7 +22,8 @@ fun parseCommand(text: String?): Pair<Command, List<String>>? {
 		else -> return null
 	}
 	return when (command) {
-		Command.SET -> {
+		// these commands need two arguments separated by "->"
+		Command.INSERT, Command.UPDATE -> {
 			if (text.indexOf("->") == -1 || !text.contains(' '))
 				null
 			else
@@ -33,12 +35,14 @@ fun parseCommand(text: String?): Pair<Command, List<String>>? {
 					)
 				)
 		}
+		// these commands need one argument
 		Command.FIND, Command.FINDREGEX, Command.ERASE, Command.ERASEREGEX -> {
 			if (!text.contains(' '))
 				null
 			else
 				Pair(command, listOf(text.substring(text.indexOf(' ') until text.length).trim()))
 		}
+		// these commands do not need arguments
 		Command.CLEAR, Command.SAVE, Command.EXIT, Command.CONTENT -> {
 			if (text.contains(' '))
 				null
@@ -94,11 +98,11 @@ fun greeting(): MutableMap<String, String> {
 	println("Hello!!!")
 	print("Do you want to continue work with database or start with empty database?[Continue/Start]")
 	var answer = readLine()!!
-	while (answer !in listOf("Continue", "Start")) {
-		println("Choose from two option(Continue/Start)")
+	while (answer.lowercase() !in listOf("continue", "start")) {
+		println("Choose from two option(Continue/Start):")
 		answer = readLine()!!
 	}
-	return if (answer == "Continue") {
+	return if (answer.lowercase() == "continue") {
 		readBase(askKeyFromUser()).toMutableMap()
 	} else {
 		writeToBase(mapOf(), "K")
@@ -118,9 +122,21 @@ fun workingProcess(cont: MutableMap<String, String>) {
 		when (command.first) {
 			Command.FIND, Command.FINDREGEX -> processFindCommand(cont, command)
 			Command.ERASE, Command.ERASEREGEX -> processEraseCommand(cont, command)
-			Command.SET -> {
-				cont[command.second[0]] = command.second[1]
-				println("Done")
+			Command.INSERT -> {
+				if (cont.containsKey(command.second[0]))
+					println("Database contains this key")
+				else {
+					cont[command.second[0]] = command.second[1]
+					println("Done")
+				}
+			}
+			Command.UPDATE -> {
+				if (!cont.containsKey(command.second[0]))
+					println("Database does not contain this key")
+				else {
+					cont[command.second[0]] = command.second[1]
+					println("Done")
+				}
 			}
 			Command.CONTENT -> println(cont.joinToString())
 			Command.CLEAR -> {
@@ -131,7 +147,15 @@ fun workingProcess(cont: MutableMap<String, String>) {
 				writeToBase(cont, askKeyFromUser())
 				println("Done")
 			}
-			Command.EXIT -> exit = true
+			Command.EXIT -> {
+				exit = true
+				println("Do you want to save data?[Y/N]")
+				val answer = readLine()
+				if (answer != "N" && answer != "n" && answer != null) {
+					writeToBase(cont, askKeyFromUser())
+					println("Data has been saved.")
+				}
+			}
 		}
 	}
 }
@@ -141,8 +165,8 @@ fun main() {
 		workingProcess(greeting())
 	} catch (e: FileNotFoundException) {
 		println(e.message)
-	} catch (e: IndexOutOfBoundsException) {
-		println("database is damaged. Do you want to clear database?[Y/N]")
+	} catch (e: IllegalAccessError) {
+		println("Wrong key. Do you want to clear database?[Y/N]")
 		val answer = readLine()!!
 		if (answer == "Y") {
 			writeToBase(mapOf(), "K")
