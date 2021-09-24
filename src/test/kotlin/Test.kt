@@ -111,6 +111,13 @@ class TestWorkingProcess {
 	}
 
 	@Test
+	fun testRollback() {
+		val cont = mutableMapOf("a" to "b", "aa" to "b")
+		val output = executeCommand(cont, "insert d -> e\nrollback\ncontent")
+		assertEquals("Done\nDone\na -> b\naa -> b\n", output)
+	}
+
+	@Test
 	fun testManyCommands() {
 		val cont = mutableMapOf<String, String>()
 		val commands = "insert a -> b\ninsert c -> long value\ncontent\ninsert ac -> bb\nfindRegex ."

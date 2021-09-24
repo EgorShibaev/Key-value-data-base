@@ -2,7 +2,18 @@ import java.io.FileNotFoundException
 import java.util.regex.PatternSyntaxException
 
 enum class Command {
-	CONTENT, INSERT, UPDATE, FIND, FINDREGEX, ERASE, ERASEREGEX, EXIT, SAVE, CLEAR
+	CONTENT, INSERT, UPDATE, FIND, FINDREGEX, ERASE, ERASEREGEX, EXIT, SAVE, CLEAR, ROLLBACK
+}
+
+data class Operation(val erased: List<Pair<String, String>>, val inserted: List<String>)
+
+fun rollBackOperation(cont: MutableMap<String, String>, operation: Operation) {
+	operation.inserted.forEach {
+		cont.remove(it)
+	}
+	operation.erased.forEach {
+		cont[it.first] = it.second
+	}
 }
 
 fun parseCommand(text: String?): Pair<Command, List<String>>? {
@@ -19,6 +30,7 @@ fun parseCommand(text: String?): Pair<Command, List<String>>? {
 		"exit" -> Command.EXIT
 		"save" -> Command.SAVE
 		"clear" -> Command.CLEAR
+		"rollback" -> Command.ROLLBACK
 		else -> return null
 	}
 	return when (command) {
@@ -43,7 +55,7 @@ fun parseCommand(text: String?): Pair<Command, List<String>>? {
 				Pair(command, listOf(text.substring(text.indexOf(' ') until text.length).trim()))
 		}
 		// these commands do not need arguments
-		Command.CLEAR, Command.SAVE, Command.EXIT, Command.CONTENT -> {
+		Command.CLEAR, Command.SAVE, Command.EXIT, Command.CONTENT, Command.ROLLBACK -> {
 			if (text.contains(' '))
 				null
 			else
@@ -69,9 +81,14 @@ fun processFindCommand(cont: Map<String, String>, command: Pair<Command, List<St
 	}
 }
 
-fun processEraseCommand(cont: MutableMap<String, String>, command: Pair<Command, List<String>>) = when (command.first) {
+fun processEraseCommand(
+	cont: MutableMap<String, String>,
+	command: Pair<Command, List<String>>,
+	operations: MutableList<Operation>
+) = when (command.first) {
 	Command.ERASE -> when {
 		cont.containsKey(command.second[0]) -> {
+			operations.add(Operation(listOf(Pair(command.second[0], cont.getValue(command.second[0]))), listOf()))
 			cont.remove(command.second[0])
 			println("Done")
 		}
@@ -80,6 +97,10 @@ fun processEraseCommand(cont: MutableMap<String, String>, command: Pair<Command,
 	else -> {
 		try {
 			val fieldsForRemove = cont.keys.filter { it.matches(command.second[0].toRegex()) }
+			val listOfRemoved = fieldsForRemove.map {
+				Pair(it, cont.getValue(it))
+			}
+			operations.add(Operation(listOfRemoved, listOf()))
 			cont.minusAssign(fieldsForRemove)
 			println("This field is removed\n$fieldsForRemove")
 		} catch (e: PatternSyntaxException) {
@@ -112,6 +133,7 @@ fun greeting(): MutableMap<String, String> {
 
 fun workingProcess(cont: MutableMap<String, String>) {
 	var exit = false
+	val operations = mutableListOf<Operation>()
 	while (!exit) {
 		print("write your command:")
 		val command = parseCommand(readLine())
@@ -121,12 +143,13 @@ fun workingProcess(cont: MutableMap<String, String>) {
 		}
 		when (command.first) {
 			Command.FIND, Command.FINDREGEX -> processFindCommand(cont, command)
-			Command.ERASE, Command.ERASEREGEX -> processEraseCommand(cont, command)
+			Command.ERASE, Command.ERASEREGEX -> processEraseCommand(cont, command, operations)
 			Command.INSERT -> {
 				if (cont.containsKey(command.second[0]))
 					println("Database contains this key")
 				else {
 					cont[command.second[0]] = command.second[1]
+					operations.add(Operation(listOf(), listOf(command.second[0])))
 					println("Done")
 				}
 			}
@@ -134,14 +157,30 @@ fun workingProcess(cont: MutableMap<String, String>) {
 				if (!cont.containsKey(command.second[0]))
 					println("Database does not contain this key")
 				else {
+					operations.add(
+						Operation(
+							listOf(Pair(command.second[0], cont.getValue(command.second[0]))),
+							listOf(command.second[0])
+						)
+					)
 					cont[command.second[0]] = command.second[1]
 					println("Done")
 				}
 			}
 			Command.CONTENT -> println(cont.joinToString())
 			Command.CLEAR -> {
+				operations.add(Operation(cont.map { Pair(it.key, it.value) }, listOf()))
 				cont.clear()
 				println("Done")
+			}
+			Command.ROLLBACK -> {
+				if (operations.isNotEmpty()) {
+					rollBackOperation(cont, operations.last())
+					operations.removeLast()
+					println("Done")
+				}
+				else
+					println("Last operation is not saved (or not exist)")
 			}
 			Command.SAVE -> {
 				writeToBase(cont, askKeyFromUser())
