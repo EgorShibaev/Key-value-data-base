@@ -1,0 +1,6 @@
+continue
+key
+content
+findRegex .
+exit
+N

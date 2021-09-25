@@ -156,7 +156,13 @@ fun processChangeCommand(
 
 fun askKeyFromUser(): String {
 	print("Key word:")
-	return readLine()!!
+	var answer : String
+	do {
+		answer = readLine() ?: throw IllegalArgumentException("Key hasn't been read")
+		if (answer.isEmpty())
+			println("key cannot be empty. Try again.")
+	} while (answer.isEmpty())
+	return answer
 }
 
 /**

@@ -1,0 +1,9 @@
+Start
+insert a -> a
+insert b -> b
+insert c -> c
+insert d -> d
+find d
+exit
+Y
+key

@@ -40,7 +40,7 @@ fun cleanOutOutput(text: String): String {
 		"write your command:",
 		"Do you want to save data?[Y/N]\n"
 	)
-	var result = text
+	var result = text.replace("\r", "")
 	listOfRubbish.forEach { result = result.replace(it, "") }
 	return result
 }
