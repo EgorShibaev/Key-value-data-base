@@ -238,9 +238,13 @@ fun workingProcess(cont: MutableMap<String, String>) {
 	}
 }
 
-fun main() {
+fun main(args : Array<String>) {
 	try {
-		workingProcess(greeting())
+		val options = processArguments(args)
+		if (options != null)
+			workWithFile(options.first, options.second)
+		else
+			workingProcess(greeting())
 	} catch (e: FileNotFoundException) {
 		println(e.message)
 	} catch (e: IllegalAccessError) {
@@ -250,5 +254,7 @@ fun main() {
 			writeToBase(mapOf(), "K")
 			println("Done")
 		}
+	} catch (e : IllegalArgumentException) {
+		println(e.message)
 	}
 }

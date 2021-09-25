@@ -1,0 +1,7 @@
+Start
+insert a -> b
+insert b -> c
+insert c -> d
+content
+exit
+N
