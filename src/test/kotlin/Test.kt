@@ -42,6 +42,20 @@ class TestEncryptDecipher {
 		val key = "key"
 		assertEquals(text, decipher(encrypt(text, key), key))
 	}
+
+	@Test
+	fun testWrongKey() {
+		val text = "some text here"
+		val key1 = "first   key"
+		val key2 = "another key"
+		try {
+			decipher(encrypt(text, key1), key2)
+			assert(false)
+		}
+		catch (e : IllegalAccessError) {
+			assert(true)
+		}
+	}
 }
 
 class TestWorkingProcess {

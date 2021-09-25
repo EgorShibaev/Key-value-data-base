@@ -16,6 +16,13 @@ fun rollBackOperation(cont: MutableMap<String, String>, operation: Operation) {
 	}
 }
 
+/**
+ * This function processes command.
+ * Firstly, first word is found and determined the command.
+ * Then arguments of this command are processed.
+ * If command need two arguments, "->" is found two string which are split by "->" is arguments
+ * If command need one argument string after ' ' is argument
+ * */
 fun parseCommand(text: String?): Pair<Command, List<String>>? {
 	if (text == null)
 		return null
@@ -81,6 +88,13 @@ fun processFindCommand(cont: Map<String, String>, command: Pair<Command, List<St
 	}
 }
 
+
+/**
+ * This function has three arguments:
+ * cont - content of database
+ * command - command (erase or eraseRegex) and arguments of this command
+ * operations - list of operation in which program will add current operation
+ * */
 fun processEraseCommand(
 	cont: MutableMap<String, String>,
 	command: Pair<Command, List<String>>,
@@ -109,12 +123,47 @@ fun processEraseCommand(
 	}
 }
 
+// arguments are the same as in processEraseCommand
+fun processChangeCommand(
+	cont: MutableMap<String, String>,
+	command: Pair<Command, List<String>>,
+	operations: MutableList<Operation>
+) = when (command.first) {
+	Command.INSERT -> {
+		if (cont.containsKey(command.second[0]))
+			println("Database contains this key")
+		else {
+			cont[command.second[0]] = command.second[1]
+			operations.add(Operation(listOf(), listOf(command.second[0])))
+			println("Done")
+		}
+	}
+	else -> {
+		if (!cont.containsKey(command.second[0]))
+			println("Database does not contain this key")
+		else {
+			operations.add(
+				Operation(
+					listOf(Pair(command.second[0], cont.getValue(command.second[0]))),
+					listOf(command.second[0])
+				)
+			)
+			cont[command.second[0]] = command.second[1]
+			println("Done")
+		}
+	}
+}
 
 fun askKeyFromUser(): String {
 	print("Key word:")
 	return readLine()!!
 }
 
+/**
+ * This function ask user what he wants: continue work with database or start with empty database.
+ * If he wants to continue, program ask key for decipher database
+ * The function return content of database
+ * */
 fun greeting(): MutableMap<String, String> {
 	println("Hello!!!")
 	print("Do you want to continue work with database or start with empty database?[Continue/Start]")
@@ -126,13 +175,24 @@ fun greeting(): MutableMap<String, String> {
 	return if (answer.lowercase() == "continue") {
 		readBase(askKeyFromUser()).toMutableMap()
 	} else {
+		// key does not matter
 		writeToBase(mapOf(), "K")
 		mutableMapOf()
 	}
 }
 
+fun sizeOfOperation(operation: Operation) = operation.erased.sumOf { it.first.length + it.second.length } +
+		operation.inserted.sumOf { it.length }
+
+/**
+ * This function organizes working process
+ * argument is content of database.
+ * there is the loop while in which program read command and process it.
+ * There is maxSizeOfOperations and when size of operations is more than it, the latest operations from list is removed.
+ * */
 fun workingProcess(cont: MutableMap<String, String>) {
 	var exit = false
+	val maxSizeOfOperations = 100
 	val operations = mutableListOf<Operation>()
 	while (!exit) {
 		print("write your command:")
@@ -144,29 +204,7 @@ fun workingProcess(cont: MutableMap<String, String>) {
 		when (command.first) {
 			Command.FIND, Command.FINDREGEX -> processFindCommand(cont, command)
 			Command.ERASE, Command.ERASEREGEX -> processEraseCommand(cont, command, operations)
-			Command.INSERT -> {
-				if (cont.containsKey(command.second[0]))
-					println("Database contains this key")
-				else {
-					cont[command.second[0]] = command.second[1]
-					operations.add(Operation(listOf(), listOf(command.second[0])))
-					println("Done")
-				}
-			}
-			Command.UPDATE -> {
-				if (!cont.containsKey(command.second[0]))
-					println("Database does not contain this key")
-				else {
-					operations.add(
-						Operation(
-							listOf(Pair(command.second[0], cont.getValue(command.second[0]))),
-							listOf(command.second[0])
-						)
-					)
-					cont[command.second[0]] = command.second[1]
-					println("Done")
-				}
-			}
+			Command.UPDATE, Command.INSERT -> processChangeCommand(cont, command, operations)
 			Command.CONTENT -> println(cont.joinToString())
 			Command.CLEAR -> {
 				operations.add(Operation(cont.map { Pair(it.key, it.value) }, listOf()))
@@ -178,8 +216,7 @@ fun workingProcess(cont: MutableMap<String, String>) {
 					rollBackOperation(cont, operations.last())
 					operations.removeLast()
 					println("Done")
-				}
-				else
+				} else
 					println("Last operation is not saved (or not exist)")
 			}
 			Command.SAVE -> {
@@ -196,6 +233,8 @@ fun workingProcess(cont: MutableMap<String, String>) {
 				}
 			}
 		}
+		while (operations.sumOf{ sizeOfOperation(it) } > maxSizeOfOperations)
+			operations.removeFirst()
 	}
 }
 
