@@ -1,20 +1,10 @@
 import java.io.FileNotFoundException
-import java.util.regex.PatternSyntaxException
 
 enum class Command {
 	CONTENT, INSERT, UPDATE, FIND, FINDREGEX, ERASE, ERASEREGEX, EXIT, SAVE, CLEAR, ROLLBACK
 }
 
 data class Operation(val erased: List<Pair<String, String>>, val inserted: List<String>)
-
-fun rollBackOperation(cont: MutableMap<String, String>, operation: Operation) {
-	operation.inserted.forEach {
-		cont.remove(it)
-	}
-	operation.erased.forEach {
-		cont[it.first] = it.second
-	}
-}
 
 /**
  * This function processes command.
@@ -72,86 +62,8 @@ fun parseCommand(text: String?): Pair<Command, List<String>>? {
 }
 
 fun Map<String, String>.joinToString(): String {
-	val result = map { "${it.key} -> ${it.value}" }.joinToString(separator = "\n")
+	val result = map { "${it.key} -> ${it.value}" }.sorted().joinToString(separator = "\n")
 	return if (result == "") "Base is empty" else result
-}
-
-fun processFindCommand(cont: Map<String, String>, command: Pair<Command, List<String>>) = when (command.first) {
-	Command.FIND -> when {
-		cont.containsKey(command.second[0]) -> println(cont[command.second[0]])
-		else -> println("Database do not contain this key")
-	}
-	else -> try {
-		println(cont.filter { it.key.matches(command.second[0].toRegex()) }.joinToString())
-	} catch (e: PatternSyntaxException) {
-		println("Error: ${e.message}")
-	}
-}
-
-
-/**
- * This function has three arguments:
- * cont - content of database
- * command - command (erase or eraseRegex) and arguments of this command
- * operations - list of operation in which program will add current operation
- * */
-fun processEraseCommand(
-	cont: MutableMap<String, String>,
-	command: Pair<Command, List<String>>,
-	operations: MutableList<Operation>
-) = when (command.first) {
-	Command.ERASE -> when {
-		cont.containsKey(command.second[0]) -> {
-			operations.add(Operation(listOf(Pair(command.second[0], cont.getValue(command.second[0]))), listOf()))
-			cont.remove(command.second[0])
-			println("Done")
-		}
-		else -> println("Database do not contain this key")
-	}
-	else -> {
-		try {
-			val fieldsForRemove = cont.keys.filter { it.matches(command.second[0].toRegex()) }
-			val listOfRemoved = fieldsForRemove.map {
-				Pair(it, cont.getValue(it))
-			}
-			operations.add(Operation(listOfRemoved, listOf()))
-			cont.minusAssign(fieldsForRemove)
-			println("This field is removed\n$fieldsForRemove")
-		} catch (e: PatternSyntaxException) {
-			println("Error: ${e.message}")
-		}
-	}
-}
-
-// arguments are the same as in processEraseCommand
-fun processChangeCommand(
-	cont: MutableMap<String, String>,
-	command: Pair<Command, List<String>>,
-	operations: MutableList<Operation>
-) = when (command.first) {
-	Command.INSERT -> {
-		if (cont.containsKey(command.second[0]))
-			println("Database contains this key")
-		else {
-			cont[command.second[0]] = command.second[1]
-			operations.add(Operation(listOf(), listOf(command.second[0])))
-			println("Done")
-		}
-	}
-	else -> {
-		if (!cont.containsKey(command.second[0]))
-			println("Database does not contain this key")
-		else {
-			operations.add(
-				Operation(
-					listOf(Pair(command.second[0], cont.getValue(command.second[0]))),
-					listOf(command.second[0])
-				)
-			)
-			cont[command.second[0]] = command.second[1]
-			println("Done")
-		}
-	}
 }
 
 fun askKeyFromUser(): String {
@@ -212,31 +124,12 @@ fun workingProcess(cont: MutableMap<String, String>) {
 			Command.ERASE, Command.ERASEREGEX -> processEraseCommand(cont, command, operations)
 			Command.UPDATE, Command.INSERT -> processChangeCommand(cont, command, operations)
 			Command.CONTENT -> println(cont.joinToString())
-			Command.CLEAR -> {
-				operations.add(Operation(cont.map { Pair(it.key, it.value) }, listOf()))
-				cont.clear()
-				println("Done")
-			}
-			Command.ROLLBACK -> {
-				if (operations.isNotEmpty()) {
-					rollBackOperation(cont, operations.last())
-					operations.removeLast()
-					println("Done")
-				} else
-					println("Last operation is not saved (or not exist)")
-			}
-			Command.SAVE -> {
-				writeToBase(cont, askKeyFromUser())
-				println("Done")
-			}
+			Command.CLEAR -> processClearCommand(cont, operations)
+			Command.ROLLBACK -> processRollBackCommand(cont, operations)
+			Command.SAVE -> processSaveCommand(cont)
 			Command.EXIT -> {
 				exit = true
-				println("Do you want to save data?[Y/N]")
-				val answer = readLine()
-				if (answer != "N" && answer != "n" && answer != null) {
-					writeToBase(cont, askKeyFromUser())
-					println("Data has been saved.")
-				}
+				processExitCommand(cont)
 			}
 		}
 		while (operations.sumOf{ sizeOfOperation(it) } > maxSizeOfOperations)

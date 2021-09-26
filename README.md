@@ -8,9 +8,9 @@
 - insert key -> value - вставляет в базу данных пару (key, value)
 - update key -> value - изменяет значение для поля key на value
 - find key - находит значение для поля key
-- findRegex regex - находит все ключи (и значения для них) которых соответсвуют regex.
+- findRegex pattern - находит все ключи (и значения для них) которых соответсвуют regex.
 - erase key - удаляет поле key
-- eraseRegex regex - удаляет все поля для которых ключ соотвтсвует regex
+- eraseRegex pattern - удаляет все поля для которых ключ соотвтсвует regex
 - exit - выход
 - save - сохраняет данные в файл
 - clear - очищает базу данных
