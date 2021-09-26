@@ -96,16 +96,43 @@ fun decipher(text: String, key: String): String {
  * All lines are split into groups of two. In each group first line
  * is key and second is value.
  * */
-fun readBase(key: String): Map<String, String> {
+fun readBase(key: String): Database {
 	val text = decipher(File("database").readText(), key)
 	val lines = if (text.isNotEmpty()) text.split('\n') else listOf()
-	val result = mutableMapOf<String, String>()
-	for (i in lines.indices step 2)
-		result[lines[i]] = lines[i + 1]
+	val result = Database(mutableMapOf(), mutableMapOf())
+	val countOfGroups = lines[0].toInt()
+	var currentLine = 1
+	repeat(countOfGroups) {
+		val nameOfGroup = lines[currentLine]
+		val countOfKeys = lines[currentLine + 1].toInt()
+		currentLine += 2
+		val keys = mutableListOf<String>()
+		repeat(countOfKeys) {
+			keys.add(lines[currentLine])
+			currentLine++
+		}
+		result.groups[nameOfGroup] = keys
+	}
+	while (currentLine < lines.size) {
+		result.content[lines[currentLine]] = lines[currentLine + 1]
+		currentLine += 2
+	}
 	return result
 }
 
-fun writeToBase(lines: Map<String, String>, key: String) {
-	val text = encrypt(lines.flatMap { listOf(it.key, it.value) }.joinToString(separator = "\n"), key)
-	File("database").writeText(text)
+fun writeToBase(database: Database, key: String) {
+	val result = StringBuilder()
+	result.append("${database.groups.size}\n")
+	database.groups.forEach {
+		result.append("${it.key}\n")
+		result.append("${it.value.size}\n")
+		it.value.forEach { key ->
+			result.append("${key}\n")
+		}
+	}
+	database.content.forEach {
+		result.append("${it.key}\n")
+		result.append("${it.value}\n")
+	}
+	File("database").writeText(encrypt(result.removeSuffix("\n").toString(), key))
 }

@@ -78,70 +78,63 @@ class TestWorkingProcess {
 	@Test
 	fun testContent() {
 		val cont = mutableMapOf("a" to "b", "c" to "b")
-		val output = executeCommand(cont, "content")
+		val output = executeCommand(Database(cont, mutableMapOf()), "content")
 		assertEquals("a -> b\nc -> b\n", output)
 	}
 
 	@Test
 	fun testFind() {
 		val cont = mutableMapOf("a" to "b", "c" to "b", "key" to "value")
-		val output = executeCommand(cont, "find a\nfindRegex .")
+		val output = executeCommand(Database(cont, mutableMapOf()), "find a\nfindRegex .")
 		assertEquals("b\na -> b\nc -> b\n", output)
 	}
 
 	@Test
 	fun testInsert() {
 		val cont = mutableMapOf("a" to "b", "c" to "b")
-		val output = executeCommand(cont, "insert new key -> new value\nfind new key")
-		assertEquals("Done\nnew value\n", output)
+		val output = executeCommand(Database(cont, mutableMapOf()), "insert new key -> new value\nfind new key")
+		assertEquals("new value\n", output)
 	}
 
 	@Test
 	fun testErase() {
 		val cont = mutableMapOf("a" to "b", "c" to "b")
-		val output = executeCommand(cont, "erase a\ncontent")
-		assertEquals("Done\nc -> b\n", output)
+		val output = executeCommand(Database(cont, mutableMapOf()), "erase a\ncontent")
+		assertEquals("c -> b\n", output)
 	}
 
 	@Test
 	fun testEraseRegex() {
 		val cont = mutableMapOf("a" to "b", "aa" to "b", "aaa" to "b")
-		val output = executeCommand(cont, "eraseRegex a{2,}\ncontent")
+		val output = executeCommand(Database(cont, mutableMapOf()), "eraseRegex a{2,}\ncontent")
 		assertEquals("This field is removed\n[aa, aaa]\na -> b\n", output)
 	}
 
 	@Test
 	fun testClear() {
 		val cont = mutableMapOf("a" to "b", "aa" to "b")
-		val output = executeCommand(cont, "content\nclear\ncontent")
-		assertEquals("a -> b\naa -> b\nDone\nBase is empty\n", output)
+		val output = executeCommand(Database(cont, mutableMapOf()), "content\nclear\ncontent")
+		assertEquals("a -> b\naa -> b\nNothing\n", output)
 	}
 
 	@Test
 	fun testUpdate() {
 		val cont = mutableMapOf("a" to "b", "aa" to "b")
-		val output = executeCommand(cont, "update aa -> bb\ncontent")
-		assertEquals("Done\na -> b\naa -> bb\n", output)
-	}
-
-	@Test
-	fun testRollback() {
-		val cont = mutableMapOf("a" to "b", "aa" to "b")
-		val output = executeCommand(cont, "insert d -> e\nrollback\ncontent")
-		assertEquals("Done\nDone\na -> b\naa -> b\n", output)
+		val output = executeCommand(Database(cont, mutableMapOf()), "update aa -> bb\ncontent")
+		assertEquals("a -> b\naa -> bb\n", output)
 	}
 
 	@Test
 	fun testManyCommands() {
 		val cont = mutableMapOf<String, String>()
 		val commands = "insert a -> b\ninsert c -> long value\ncontent\ninsert ac -> bb\nfindRegex ."
-		val output = executeCommand(cont, commands)
-		assertEquals("Done\nDone\na -> b\nc -> long value\nDone\na -> b\nc -> long value\n", output)
+		val output = executeCommand(Database(cont, mutableMapOf()), commands)
+		assertEquals("a -> b\nc -> long value\na -> b\nc -> long value\n", output)
 	}
 
-	private fun executeCommand(cont: MutableMap<String, String>, commands: String): String {
+	private fun executeCommand(database: Database, commands: String): String {
 		System.setIn(ByteArrayInputStream(("$commands\nexit\nN\n").toByteArray()))
-		workingProcess(cont)
+		workingProcess(database)
 		return stream.toString().trim()
 			.replace("write your command:".toRegex(), "").replace("\r", "")
 			.replace("Do you want to save data?[Y/N]", "")

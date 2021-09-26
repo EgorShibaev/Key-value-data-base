@@ -1,13 +1,11 @@
 import java.io.FileNotFoundException
 
 enum class Command {
-	CONTENT, INSERT, UPDATE, FIND, FINDREGEX, ERASE, ERASEREGEX, EXIT, SAVE, CLEAR, ROLLBACK
+	CONTENT, INSERT, UPDATE, FIND, FIND_REGEX, ERASE, ERASE_REGEX, EXIT, SAVE, CLEAR, CREATE_GROUP,
+	ERASE_GROUP, ERASE_FROM_GROUP, INSERT_IN_GROUP, FIND_IN_GROUP, CONTENT_OF_GROUP, CONTENT_OF_ALL_GROUPS
 }
 
-data class Operation(val erased: List<Pair<String, String>>, val inserted: List<String>) {
-	fun getSize() = erased.sumOf { it.first.length + it.second.length } +
-			inserted.sumOf { it.length }
-}
+data class Database(val content: MutableMap<String, String>, val groups: MutableMap<String, MutableList<String>>)
 
 /**
  * This function processes command.
@@ -24,18 +22,24 @@ fun parseCommand(text: String?): Pair<Command, List<String>>? {
 		"insert" -> Command.INSERT
 		"update" -> Command.UPDATE
 		"find" -> Command.FIND
-		"findRegex" -> Command.FINDREGEX
+		"findRegex" -> Command.FIND_REGEX
 		"erase" -> Command.ERASE
-		"eraseRegex" -> Command.ERASEREGEX
+		"eraseRegex" -> Command.ERASE_REGEX
 		"exit" -> Command.EXIT
 		"save" -> Command.SAVE
 		"clear" -> Command.CLEAR
-		"rollback" -> Command.ROLLBACK
+		"createGroup" -> Command.CREATE_GROUP
+		"eraseGroup" -> Command.ERASE_GROUP
+		"eraseFromGroup" -> Command.ERASE_FROM_GROUP
+		"insertInGroup" -> Command.INSERT_IN_GROUP
+		"findInGroup" -> Command.FIND_IN_GROUP
+		"contentOfGroup" -> Command.CONTENT_OF_GROUP
+		"contentOfAllGroups" -> Command.CONTENT_OF_ALL_GROUPS
 		else -> return null
 	}
 	return when (command) {
 		// these commands need two arguments separated by "->"
-		Command.INSERT, Command.UPDATE -> {
+		Command.INSERT, Command.UPDATE, Command.INSERT_IN_GROUP, Command.ERASE_FROM_GROUP, Command.FIND_IN_GROUP -> {
 			if (text.indexOf("->") == -1 || !text.contains(' '))
 				null
 			else
@@ -48,14 +52,15 @@ fun parseCommand(text: String?): Pair<Command, List<String>>? {
 				)
 		}
 		// these commands need one argument
-		Command.FIND, Command.FINDREGEX, Command.ERASE, Command.ERASEREGEX -> {
+		Command.FIND, Command.FIND_REGEX, Command.ERASE, Command.ERASE_REGEX, Command.CONTENT_OF_GROUP,
+		Command.CREATE_GROUP, Command.ERASE_GROUP -> {
 			if (!text.contains(' '))
 				null
 			else
 				Pair(command, listOf(text.substring(text.indexOf(' ') until text.length).trim()))
 		}
 		// these commands do not need arguments
-		Command.CLEAR, Command.SAVE, Command.EXIT, Command.CONTENT, Command.ROLLBACK -> {
+		Command.CLEAR, Command.SAVE, Command.EXIT, Command.CONTENT, Command.CONTENT_OF_ALL_GROUPS -> {
 			if (text.contains(' '))
 				null
 			else
@@ -65,13 +70,13 @@ fun parseCommand(text: String?): Pair<Command, List<String>>? {
 }
 
 fun Map<String, String>.joinToString(): String {
-	val result = map { "${it.key} -> ${it.value}" }.sorted().joinToString(separator = "\n")
-	return if (result == "") "Base is empty" else result
+	val result = toSortedMap().map { "${it.key} -> ${it.value}" }.joinToString(separator = "\n")
+	return if (result == "") "Nothing" else result
 }
 
 fun askKeyFromUser(): String {
 	print("Key word:")
-	var answer : String
+	var answer: String
 	do {
 		answer = readLine() ?: throw IllegalArgumentException("Key hasn't been read")
 		if (answer.isEmpty())
@@ -85,20 +90,20 @@ fun askKeyFromUser(): String {
  * If he wants to continue, program ask key for decipher database
  * The function return content of database
  * */
-fun greeting(): MutableMap<String, String> {
+fun greeting(): Database {
 	println("Hello!!!")
 	print("Do you want to continue work with database or start with empty database?[Continue/Start]")
-	var answer = readLine()!!
+	var answer = readLine() ?: throw IllegalArgumentException("Answer hasn't been read")
 	while (answer.lowercase() !in listOf("continue", "start")) {
 		println("Choose from two option(Continue/Start):")
-		answer = readLine()!!
+		answer = readLine() ?: throw IllegalArgumentException("Answer hasn't been read")
 	}
 	return if (answer.lowercase() == "continue") {
 		var keyIsCorrect = false
-		var res = mutableMapOf<String, String>()
+		var res = Database(mutableMapOf(), mutableMapOf())
 		while (!keyIsCorrect) {
 			try {
-				res = readBase(askKeyFromUser()).toMutableMap()
+				res = readBase(askKeyFromUser())
 				keyIsCorrect = true
 			} catch (e: IllegalAccessError) {
 				println("Wrong key.")
@@ -107,8 +112,8 @@ fun greeting(): MutableMap<String, String> {
 		res
 	} else {
 		// key does not matter
-		writeToBase(mapOf(), "K")
-		mutableMapOf()
+		writeToBase(Database(mutableMapOf(), mutableMapOf()), "K")
+		Database(mutableMapOf(), mutableMapOf())
 	}
 }
 
@@ -118,10 +123,8 @@ fun greeting(): MutableMap<String, String> {
  * there is the loop while in which program read command and process it.
  * There is maxSizeOfOperations and when size of operations is more than it, the latest operations from list is removed.
  * */
-fun workingProcess(cont: MutableMap<String, String>) {
+fun workingProcess(database: Database) {
 	var exit = false
-	val maxSizeOfOperations = 100
-	val operations = mutableListOf<Operation>()
 	while (!exit) {
 		print("write your command:")
 		val command = parseCommand(readLine())
@@ -130,24 +133,28 @@ fun workingProcess(cont: MutableMap<String, String>) {
 			continue
 		}
 		when (command.first) {
-			Command.FIND, Command.FINDREGEX -> processFindCommand(cont, command)
-			Command.ERASE, Command.ERASEREGEX -> processEraseCommand(cont, command, operations)
-			Command.UPDATE, Command.INSERT -> processChangeCommand(cont, command, operations)
-			Command.CONTENT -> println(cont.joinToString())
-			Command.CLEAR -> processClearCommand(cont, operations)
-			Command.ROLLBACK -> processRollBackCommand(cont, operations)
-			Command.SAVE -> processSaveCommand(cont)
+			Command.FIND, Command.FIND_REGEX -> processFindCommand(database, command)
+			Command.ERASE, Command.ERASE_REGEX -> processEraseCommand(database, command)
+			Command.UPDATE, Command.INSERT -> processChangeCommand(database, command)
+			Command.CONTENT -> println(database.content.joinToString())
+			Command.ERASE_GROUP -> processEraseGroupCommand(database, command)
+			Command.CREATE_GROUP -> processCreateGroupCommand(database, command)
+			Command.CLEAR -> processClearCommand(database)
+			Command.SAVE -> processSaveCommand(database)
+			Command.CONTENT_OF_GROUP -> processContentOfGroupCommand(database, command)
+			Command.CONTENT_OF_ALL_GROUPS -> processContentOfAllGroupsCommand(database)
+			Command.FIND_IN_GROUP -> processFindInGroupCommand(database, command)
+			Command.ERASE_FROM_GROUP -> processEraseFromGroupCommand(database, command)
+			Command.INSERT_IN_GROUP -> processInsertInGroupCommand(database, command)
 			Command.EXIT -> {
 				exit = true
-				processExitCommand(cont)
+				processExitCommand(database)
 			}
 		}
-		while (operations.sumOf{ it.getSize() } > maxSizeOfOperations)
-			operations.removeFirst()
 	}
 }
 
-fun main(args : Array<String>) {
+fun main(args: Array<String>) {
 	try {
 		val options = processArguments(args)
 		if (options != null)
@@ -156,7 +163,7 @@ fun main(args : Array<String>) {
 			workingProcess(greeting())
 	} catch (e: FileNotFoundException) {
 		println(e.message)
-	} catch (e : IllegalArgumentException) {
+	} catch (e: IllegalArgumentException) {
 		println(e.message)
 	}
 }
