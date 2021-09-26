@@ -4,7 +4,10 @@ enum class Command {
 	CONTENT, INSERT, UPDATE, FIND, FINDREGEX, ERASE, ERASEREGEX, EXIT, SAVE, CLEAR, ROLLBACK
 }
 
-data class Operation(val erased: List<Pair<String, String>>, val inserted: List<String>)
+data class Operation(val erased: List<Pair<String, String>>, val inserted: List<String>) {
+	fun getSize() = erased.sumOf { it.first.length + it.second.length } +
+			inserted.sumOf { it.length }
+}
 
 /**
  * This function processes command.
@@ -91,16 +94,23 @@ fun greeting(): MutableMap<String, String> {
 		answer = readLine()!!
 	}
 	return if (answer.lowercase() == "continue") {
-		readBase(askKeyFromUser()).toMutableMap()
+		var keyIsCorrect = false
+		var res = mutableMapOf<String, String>()
+		while (!keyIsCorrect) {
+			try {
+				res = readBase(askKeyFromUser()).toMutableMap()
+				keyIsCorrect = true
+			} catch (e: IllegalAccessError) {
+				println("Wrong key.")
+			}
+		}
+		res
 	} else {
 		// key does not matter
 		writeToBase(mapOf(), "K")
 		mutableMapOf()
 	}
 }
-
-fun sizeOfOperation(operation: Operation) = operation.erased.sumOf { it.first.length + it.second.length } +
-		operation.inserted.sumOf { it.length }
 
 /**
  * This function organizes working process
@@ -132,7 +142,7 @@ fun workingProcess(cont: MutableMap<String, String>) {
 				processExitCommand(cont)
 			}
 		}
-		while (operations.sumOf{ sizeOfOperation(it) } > maxSizeOfOperations)
+		while (operations.sumOf{ it.getSize() } > maxSizeOfOperations)
 			operations.removeFirst()
 	}
 }
@@ -146,13 +156,6 @@ fun main(args : Array<String>) {
 			workingProcess(greeting())
 	} catch (e: FileNotFoundException) {
 		println(e.message)
-	} catch (e: IllegalAccessError) {
-		println("Wrong key. Do you want to clear database?[Y/N]")
-		val answer = readLine()!!
-		if (answer == "Y") {
-			writeToBase(mapOf(), "K")
-			println("Done")
-		}
 	} catch (e : IllegalArgumentException) {
 		println(e.message)
 	}
