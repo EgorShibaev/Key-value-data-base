@@ -1,10 +1,11 @@
 Start
+createGroup gr
 insert a -> b
 insert b -> c
 insert c -> d
 update c -> a
+insertInGroup a -> gr
 content
-rollback
-content
+findInGroup gr -> a
 exit
 N

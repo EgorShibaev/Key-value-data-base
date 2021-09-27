@@ -14,6 +14,11 @@ fun processArguments(args: Array<String>): Pair<String, String?>? {
 	return Pair(args[1], args.getOrNull(2))
 }
 
+/**
+ * In this function happens redirection of input and output
+ * input from first file.
+ * output in second file.
+ * */
 fun workWithFile(nameInput: String, nameOutput: String?) {
 	val standardOut = System.out
 	val standardIn = System.`in`
@@ -23,6 +28,7 @@ fun workWithFile(nameInput: String, nameOutput: String?) {
 	System.setIn(ByteArrayInputStream(inputFile.readBytes()))
 	workingProcess(greeting())
 	if (nameOutput != null) {
+		File(nameOutput).createNewFile()
 		File(nameOutput).writeBytes(
 			cleanOutOutput(stream.toString()).toByteArray()
 		)

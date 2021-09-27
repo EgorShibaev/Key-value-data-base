@@ -3,5 +3,14 @@ insert a -> b
 insert b -> c
 insert c -> d
 content
+createGroup gr1
+insertInGroup a -> gr1
+insertInGroup b -> gr1
+contentOfGroup gr1
+erase a
+contentOfGroup gr1
+insertInGroup c -> gr1
+eraseFromGroup gr1 -> a
+contentOfGroup gr1
 exit
 N

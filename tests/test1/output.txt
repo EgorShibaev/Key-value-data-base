@@ -1,6 +1,9 @@
-Done
-Done
-Done
 a -> b
+b -> c
+c -> d
+a -> b
+b -> c
+b -> c
+Group gr1 does not contain a
 b -> c
 c -> d

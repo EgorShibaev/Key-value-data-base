@@ -2,9 +2,8 @@ import java.util.regex.PatternSyntaxException
 
 /**
  * This function has three arguments:
- * cont - content of database
+ * database - content of database
  * command - command (erase or eraseRegex) and arguments of this command
- * operations - list of operation in which program will add current operation
  * */
 fun processEraseCommand(
 	database: Database,

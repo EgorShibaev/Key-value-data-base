@@ -48,7 +48,7 @@ fun parseCommand(text: String?): Pair<Command, List<String>>? {
 			listOfAvailable.forEach {
 				var countOfDifferent = 0
 				for (i in 0 until maxOf(it.length, command.length))
-					if (it.getOrNull(i) != command.getOrNull(i))
+					if (it.lowercase().getOrNull(i) != command.getOrNull(i))
 						countOfDifferent++
 				if (countOfDifferent < 3)
 					println("Maybe you mean $it")

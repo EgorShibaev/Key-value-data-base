@@ -93,8 +93,12 @@ fun decipher(text: String, key: String): String {
 /**
  * This two function below are responsible for interaction with database.
  * readBase receive key and call decipher with this key.
- * All lines are split into groups of two. In each group first line
- * is key and second is value.
+ * Data is saved in file in this way:
+ * first line in number of groups
+ * in next lines there is description of each group
+ * for each group there is name of group, count of keys in groups
+ * and keys on next lines.
+ * On next lines there is content of database.
  * */
 fun readBase(key: String): Database {
 	val text = decipher(File("database").readText(), key)
