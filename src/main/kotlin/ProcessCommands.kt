@@ -71,6 +71,7 @@ fun processFindCommand(database: Database, command: Pair<Command, List<String>>)
 
 fun processClearCommand(database: Database) {
 	database.content.clear()
+	database.groups.clear()
 }
 
 fun processSaveCommand(database: Database) {
@@ -88,21 +89,21 @@ fun processExitCommand(database: Database) {
 
 fun processCreateGroupCommand(database: Database, command: Pair<Command, List<String>>) {
 	if (database.groups.containsKey(command.second[0]))
-		println("Group with name ${command.second[0]} exist")
+		println("Group with name ${command.second[0]} exists")
 	else
 		database.groups[command.second[0]] = mutableListOf()
 }
 
 fun processEraseGroupCommand(database: Database, command: Pair<Command, List<String>>) {
 	if (!database.groups.containsKey(command.second[0]))
-		println("Group with name ${command.second[0]} do not exist")
+		println("Group with name ${command.second[0]} does not exist")
 	else
 		database.groups.remove(command.second[0])
 }
 
 fun processInsertInGroupCommand(database: Database, command: Pair<Command, List<String>>) {
 	when {
-		!database.groups.containsKey(command.second[1]) -> println("Group with name ${command.second[1]} do not exist")
+		!database.groups.containsKey(command.second[1]) -> println("Group with name ${command.second[1]} does not exist")
 		database.groups.getValue(command.second[1]).contains(command.second[0]) ->
 			println("Group ${command.second[1]} contain ${command.second[0]}")
 		!database.content.containsKey(command.second[0]) ->
@@ -115,9 +116,9 @@ fun processInsertInGroupCommand(database: Database, command: Pair<Command, List<
 
 fun processEraseFromGroupCommand(database: Database, command: Pair<Command, List<String>>) {
 	when {
-		!database.groups.containsKey(command.second[0]) -> println("Group with name ${command.second[0]} do not exist")
+		!database.groups.containsKey(command.second[0]) -> println("Group with name ${command.second[0]} does not exist")
 		!database.groups.getValue(command.second[0]).contains(command.second[1]) ->
-			println("Group ${command.second[0]} do not contain ${command.second[1]}")
+			println("Group ${command.second[0]} does not contain ${command.second[1]}")
 		!database.content.containsKey(command.second[1]) ->
 			println("Database does not contain this key")
 		else -> {
@@ -128,17 +129,17 @@ fun processEraseFromGroupCommand(database: Database, command: Pair<Command, List
 
 fun processFindInGroupCommand(database: Database, command: Pair<Command, List<String>>) {
 	when {
-		!database.groups.containsKey(command.second[0]) -> println("Group with name ${command.second[0]} do not exist")
+		!database.groups.containsKey(command.second[0]) -> println("Group with name ${command.second[0]} does not exist")
 		database.groups.getValue(command.second[0]).contains(command.second[1]) ->
 			println("${command.second[1]} -> ${database.content.getValue(command.second[1])}")
 		else ->
-			println("Group ${command.second[0]} do not contain ${command.second[1]}")
+			println("Group ${command.second[0]} does not contain ${command.second[1]}")
 	}
 }
 
 fun processContentOfGroupCommand(database: Database, command: Pair<Command, List<String>>) {
 	when {
-		!database.groups.containsKey(command.second[0]) -> println("Group with name ${command.second[0]} do not exist")
+		!database.groups.containsKey(command.second[0]) -> println("Group with name ${command.second[0]} does not exist")
 		else -> {
 			val keys = database.groups.getValue(command.second[0])
 			println(database.content.filter {
