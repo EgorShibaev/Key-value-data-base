@@ -35,13 +35,34 @@ fun parseCommand(text: String?): Pair<Command, List<String>>? {
 		"findInGroup" -> Command.FIND_IN_GROUP
 		"contentOfGroup" -> Command.CONTENT_OF_GROUP
 		"contentOfAllGroups" -> Command.CONTENT_OF_ALL_GROUPS
-		else -> return null
+		else -> {
+			val command = text.split(' ').first().lowercase()
+			if (command == "")
+				return null
+			println("Incorrect command")
+			val listOfAvailable = listOf(
+				"content", "insert", "update", "find", "findRegex", "erase", "eraseRegex", "exit", "save", "clear",
+				"createGroup", "eraseGroup", "eraseFromGroup", "insertInGroup", "findInGroup", "contentOfGroup",
+				"contentOfAllGroups"
+			)
+			listOfAvailable.forEach {
+				var countOfDifferent = 0
+				for (i in 0 until maxOf(it.length, command.length))
+					if (it.getOrNull(i) != command.getOrNull(i))
+						countOfDifferent++
+				if (countOfDifferent < 3)
+					println("Maybe you mean $it")
+			}
+			return null
+		}
 	}
 	return when (command) {
 		// these commands need two arguments separated by "->"
 		Command.INSERT, Command.UPDATE, Command.INSERT_IN_GROUP, Command.ERASE_FROM_GROUP, Command.FIND_IN_GROUP -> {
-			if (text.indexOf("->") == -1 || !text.contains(' '))
+			if (text.indexOf("->") == -1 || !text.contains(' ')) {
+				println("Wrong count of arguments")
 				null
+			}
 			else
 				Pair(
 					command,
@@ -54,15 +75,19 @@ fun parseCommand(text: String?): Pair<Command, List<String>>? {
 		// these commands need one argument
 		Command.FIND, Command.FIND_REGEX, Command.ERASE, Command.ERASE_REGEX, Command.CONTENT_OF_GROUP,
 		Command.CREATE_GROUP, Command.ERASE_GROUP -> {
-			if (!text.contains(' '))
+			if (!text.contains(' ')) {
+				println("Wrong count of arguments")
 				null
+			}
 			else
 				Pair(command, listOf(text.substring(text.indexOf(' ') until text.length).trim()))
 		}
 		// these commands do not need arguments
 		Command.CLEAR, Command.SAVE, Command.EXIT, Command.CONTENT, Command.CONTENT_OF_ALL_GROUPS -> {
-			if (text.contains(' '))
+			if (text.contains(' ')) {
+				println("Wrong count of arguments")
 				null
+			}
 			else
 				Pair(command, listOf())
 		}
@@ -127,11 +152,7 @@ fun workingProcess(database: Database) {
 	var exit = false
 	while (!exit) {
 		print("write your command:")
-		val command = parseCommand(readLine())
-		if (command == null) {
-			println("Incorrect command")
-			continue
-		}
+		val command = parseCommand(readLine()) ?: continue
 		when (command.first) {
 			Command.FIND, Command.FIND_REGEX -> processFindCommand(database, command)
 			Command.ERASE, Command.ERASE_REGEX -> processEraseCommand(database, command)
