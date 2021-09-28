@@ -1,10 +1,9 @@
 import java.util.regex.PatternSyntaxException
-
 /**
- * This function has three arguments:
- * database - content of database
- * command - command (erase or eraseRegex) and arguments of this command
+ * All function in this file organize procession of commands.
+ * Each function arguments are content of database and command.
  * */
+
 fun processEraseCommand(
 	database: Database,
 	command: Pair<Command, List<String>>
@@ -77,12 +76,16 @@ fun processSaveCommand(database: Database) {
 	writeToBase(database, askKeyFromUser())
 }
 
-fun processExitCommand(database: Database) {
-	println("Do you want to save data?[Y/N]")
-	val answer = readLine()
-	if (answer != "N" && answer != "n" && answer != null) {
-		writeToBase(database, askKeyFromUser())
-		println("Data has been saved.")
+fun processExitCommand(database: Database): Boolean {
+	println("Do you want to save data?[Y/N/Cancel]")
+	return when (readLine()) {
+		"N", "n" -> true
+		"Cancel", "cancel" -> false
+		else -> {
+			writeToBase(database, askKeyFromUser())
+			println("Data has been saved.")
+			true
+		}
 	}
 }
 

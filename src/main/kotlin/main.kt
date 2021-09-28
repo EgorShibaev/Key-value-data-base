@@ -10,6 +10,7 @@ data class Database(val content: MutableMap<String, String>, val groups: Mutable
 /**
  * This function processes command.
  * Firstly, first word is found and determined the command.
+ * If command of user is not found program find all possibilities.
  * Then arguments of this command are processed.
  * If command need two arguments, "->" is found two string which are split by "->" is arguments
  * If command need one argument string after ' ' is argument
@@ -62,8 +63,7 @@ fun parseCommand(text: String?): Pair<Command, List<String>>? {
 			if (text.indexOf("->") == -1 || !text.contains(' ')) {
 				println("Wrong count of arguments")
 				null
-			}
-			else
+			} else
 				Pair(
 					command,
 					listOf(
@@ -78,8 +78,7 @@ fun parseCommand(text: String?): Pair<Command, List<String>>? {
 			if (!text.contains(' ')) {
 				println("Wrong count of arguments")
 				null
-			}
-			else
+			} else
 				Pair(command, listOf(text.substring(text.indexOf(' ') until text.length).trim()))
 		}
 		// these commands do not need arguments
@@ -87,13 +86,18 @@ fun parseCommand(text: String?): Pair<Command, List<String>>? {
 			if (text.contains(' ')) {
 				println("Wrong count of arguments")
 				null
-			}
-			else
+			} else
 				Pair(command, listOf())
 		}
 	}
 }
 
+/**
+ * Representation map in readable form.
+ * key1 -> value1
+ * key2 -> value2
+ * ...
+ * */
 fun Map<String, String>.joinToString(): String {
 	val result = toSortedMap().map { "${it.key} -> ${it.value}" }.joinToString(separator = "\n")
 	return if (result == "") "Nothing" else result
@@ -145,8 +149,7 @@ fun greeting(): Database {
 /**
  * This function organizes working process
  * argument is content of database.
- * there is the loop while in which program read command and process it.
- * There is maxSizeOfOperations and when size of operations is more than it, the latest operations from list is removed.
+ * there is the loop while in which program read command and call function which process it.
  * */
 fun workingProcess(database: Database) {
 	var exit = false
@@ -167,10 +170,7 @@ fun workingProcess(database: Database) {
 			Command.FIND_IN_GROUP -> processFindInGroupCommand(database, command)
 			Command.ERASE_FROM_GROUP -> processEraseFromGroupCommand(database, command)
 			Command.INSERT_IN_GROUP -> processInsertInGroupCommand(database, command)
-			Command.EXIT -> {
-				exit = true
-				processExitCommand(database)
-			}
+			Command.EXIT -> exit = processExitCommand(database)
 		}
 	}
 }
