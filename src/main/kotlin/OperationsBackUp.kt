@@ -1,3 +1,8 @@
+/**
+ * In this file are classes which organize storage of operation and functions to roll back
+ * this operation. There are classes for each operation with method for rollback.
+ * There is class Operation which contains nullable field of all extra classes.
+ * */
 data class Operation(
 	val insertOperation: InsertOperation?,
 	val eraseOperation: EraseOperation?,
@@ -74,7 +79,9 @@ data class EraseFromGroupOperation(val key: String, val groupName: String) {
 	}
 }
 
-
+/**
+ * This function return for all command class with info which we need to roll back operation.
+ * */
 fun createOperationForCommand(database: Database, command: Pair<Command, List<String>>): Operation {
 	val args = command.second
 	val content = database.content

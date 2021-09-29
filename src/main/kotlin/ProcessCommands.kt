@@ -5,6 +5,10 @@ import java.util.regex.PatternSyntaxException
  * Each function arguments are content of database and command.
  * */
 
+
+/**
+ * This function check are arguments of commands correct.
+ * */
 fun checkValidity(database: Database, command: Pair<Command, List<String>>): Boolean {
 	val args = command.second
 	val content = database.content

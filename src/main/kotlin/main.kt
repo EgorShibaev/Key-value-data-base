@@ -159,7 +159,7 @@ fun workingProcess(database: Database) {
 	while (!exit) {
 		print("write your command:")
 		val command = parseCommand(readLine()) ?: continue
-		if (!checkValidity(database, command)){
+		if (!checkValidity(database, command)) {
 			println("Incorrect arguments")
 			continue
 		}
