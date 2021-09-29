@@ -2,7 +2,7 @@ import java.io.FileNotFoundException
 
 enum class Command {
 	CONTENT, INSERT, UPDATE, FIND, FIND_REGEX, ERASE, ERASE_REGEX, EXIT, SAVE, CLEAR, CREATE_GROUP,
-	ERASE_GROUP, ERASE_FROM_GROUP, INSERT_IN_GROUP, FIND_IN_GROUP, CONTENT_OF_GROUP, CONTENT_OF_ALL_GROUPS
+	ERASE_GROUP, ERASE_FROM_GROUP, INSERT_IN_GROUP, FIND_IN_GROUP, CONTENT_OF_GROUP, CONTENT_OF_ALL_GROUPS, ROLLBACK
 }
 
 data class Database(val content: MutableMap<String, String>, val groups: MutableMap<String, MutableList<String>>)
@@ -36,6 +36,7 @@ fun parseCommand(text: String?): Pair<Command, List<String>>? {
 		"findInGroup" -> Command.FIND_IN_GROUP
 		"contentOfGroup" -> Command.CONTENT_OF_GROUP
 		"contentOfAllGroups" -> Command.CONTENT_OF_ALL_GROUPS
+		"rollback" -> Command.ROLLBACK
 		else -> {
 			val command = text.split(' ').first().lowercase()
 			if (command == "")
@@ -82,7 +83,7 @@ fun parseCommand(text: String?): Pair<Command, List<String>>? {
 				Pair(command, listOf(text.substring(text.indexOf(' ') until text.length).trim()))
 		}
 		// these commands do not need arguments
-		Command.CLEAR, Command.SAVE, Command.EXIT, Command.CONTENT, Command.CONTENT_OF_ALL_GROUPS -> {
+		Command.CLEAR, Command.SAVE, Command.EXIT, Command.CONTENT, Command.CONTENT_OF_ALL_GROUPS, Command.ROLLBACK -> {
 			if (text.contains(' ')) {
 				println("Wrong count of arguments")
 				null
@@ -153,9 +154,16 @@ fun greeting(): Database {
  * */
 fun workingProcess(database: Database) {
 	var exit = false
+	val savesOperations = mutableListOf<Operation>()
 	while (!exit) {
 		print("write your command:")
 		val command = parseCommand(readLine()) ?: continue
+		if (command.first in setOf(
+				Command.ERASE, Command.ERASE_REGEX, Command.UPDATE, Command.INSERT, Command.ERASE_GROUP,
+				Command.CREATE_GROUP, Command.CLEAR, Command.ERASE_FROM_GROUP, Command.INSERT_IN_GROUP
+			)
+		)
+			savesOperations.add(createOperationForCommand(database, command))
 		when (command.first) {
 			Command.FIND, Command.FIND_REGEX -> processFindCommand(database, command)
 			Command.ERASE, Command.ERASE_REGEX -> processEraseCommand(database, command)
@@ -170,6 +178,7 @@ fun workingProcess(database: Database) {
 			Command.FIND_IN_GROUP -> processFindInGroupCommand(database, command)
 			Command.ERASE_FROM_GROUP -> processEraseFromGroupCommand(database, command)
 			Command.INSERT_IN_GROUP -> processInsertInGroupCommand(database, command)
+			Command.ROLLBACK -> processRollbackCommand(database, savesOperations)
 			Command.EXIT -> exit = processExitCommand(database)
 		}
 	}

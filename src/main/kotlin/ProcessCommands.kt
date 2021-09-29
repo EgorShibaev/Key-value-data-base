@@ -89,6 +89,15 @@ fun processExitCommand(database: Database): Boolean {
 	}
 }
 
+fun processRollbackCommand(database: Database, operations: MutableList<Operation>) {
+	if (operations.isEmpty())
+		println("Last operation is not saved (or not exists).")
+	else {
+		operations.last().rollback(database)
+		operations.removeLast()
+	}
+}
+
 fun processCreateGroupCommand(database: Database, command: Pair<Command, List<String>>) {
 	if (database.groups.containsKey(command.second[0]))
 		println("Group with name ${command.second[0]} exists")

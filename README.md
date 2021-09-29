@@ -19,6 +19,7 @@
 - findInGroup name -> key - ищет значения для ключа key в группе name
 - contentOfGroup name - выводит содержимое группы name
 - contentOfAllGroups - выводит содержимое всех групп
+- rollback - отменяет последнюю команду
 - exit - выход
 - save - сохраняет данные в файл
 
