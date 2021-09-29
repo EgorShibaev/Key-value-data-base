@@ -15,9 +15,10 @@ data class Database(val content: MutableMap<String, String>, val groups: Mutable
  * If command need two arguments, "->" is found two string which are split by "->" is arguments
  * If command need one argument string after ' ' is argument
  * */
-fun parseCommand(text: String?): Pair<Command, List<String>>? {
-	if (text == null)
+fun parseCommand(input: String?): Pair<Command, List<String>>? {
+	if (input == null)
 		return null
+	val text = input.trim()
 	val command = when (text.split(' ').first()) {
 		"content" -> Command.CONTENT
 		"insert" -> Command.INSERT
@@ -158,6 +159,10 @@ fun workingProcess(database: Database) {
 	while (!exit) {
 		print("write your command:")
 		val command = parseCommand(readLine()) ?: continue
+		if (!checkValidity(database, command)){
+			println("Incorrect arguments")
+			continue
+		}
 		if (command.first in setOf(
 				Command.ERASE, Command.ERASE_REGEX, Command.UPDATE, Command.INSERT, Command.ERASE_GROUP,
 				Command.CREATE_GROUP, Command.CLEAR, Command.ERASE_FROM_GROUP, Command.INSERT_IN_GROUP
