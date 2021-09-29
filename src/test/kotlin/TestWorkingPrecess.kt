@@ -77,7 +77,7 @@ class TestWorkingProcess {
 		val cont = mutableMapOf("a" to "b", "aa" to "b")
 		val command = "createGroup gr1\ncontentOfGroup gr1\neraseGroup gr1\ncontentOfGroup gr1"
 		val output = executeCommand(Database(cont, mutableMapOf()), command)
-		assertEquals("Nothing\nGroup with name gr1 does not exist\n", output)
+		assertEquals("Nothing\nIncorrect arguments\n", output)
 	}
 
 	@Test
@@ -120,11 +120,86 @@ class TestWorkingProcess {
 		assertEquals("a -> b\nc -> b\n", output)
 	}
 
+	@Test
+	fun testRollbackInsert() {
+		val database = Database(mutableMapOf("a" to "b"), mutableMapOf())
+		val command = "insert b -> c\ncontent\nrollback\ncontent"
+		val output = executeCommand(database, command)
+		assertEquals("a -> b\nb -> c\na -> b\n", output)
+	}
+
+	@Test
+	fun testRollbackErase() {
+		val database = Database(mutableMapOf("a" to "b"), mutableMapOf())
+		val command = "erase a\ncontent\nrollback\ncontent"
+		val output = executeCommand(database, command)
+		assertEquals("Nothing\na -> b\n", output)
+	}
+
+	@Test
+	fun testRollbackUpdate() {
+		val database = Database(mutableMapOf("a" to "b"), mutableMapOf())
+		val command = "update a -> new value\ncontent\nrollback\ncontent"
+		val output = executeCommand(database, command)
+		assertEquals("a -> new value\na -> b\n", output)
+	}
+
+	@Test
+	fun testRollbackEraseRegex() {
+		val database = Database(mutableMapOf("a" to "b", "b" to "c", "aa" to "bb"), mutableMapOf())
+		val command = "eraseRegex .\ncontent\nrollback\ncontent"
+		val output = executeCommand(database, command)
+		assertEquals("This field is removed\n[a, b]\naa -> bb\na -> b\naa -> bb\nb -> c\n", output)
+	}
+
+	@Test
+	fun testRollbackClear() {
+		val database = Database(mutableMapOf("a" to "b", "b" to "c", "aa" to "bb"), mutableMapOf())
+		val command = "clear\ncontent\nrollback\ncontent"
+		val output = executeCommand(database, command)
+		assertEquals("Nothing\na -> b\naa -> bb\nb -> c\n", output)
+	}
+
+	@Test
+	fun testRollbackCreateGroup() {
+		val database = Database(mutableMapOf("a" to "b"), mutableMapOf())
+		val command = "createGroup gr1\ncontentOfAllGroups\nrollback\ncontentOfAllGroups"
+		val output = executeCommand(database, command)
+		assertEquals("Name: gr1\nContent:\nNothing\n", output)
+	}
+
+	@Test
+	fun testRollbackEraseGroup() {
+		val database = Database(mutableMapOf("a" to "b"), mutableMapOf("gr1" to mutableListOf()))
+		val command = "eraseGroup gr1\ncontentOfAllGroups\nrollback\ncontentOfAllGroups"
+		val output = executeCommand(database, command)
+		assertEquals("Name: gr1\nContent:\nNothing\n", output)
+	}
+
+	@Test
+	fun testRollbackInsertInGroup() {
+		val database = Database(mutableMapOf("a" to "b", "c" to "d", "e" to "f"),
+			mutableMapOf("gr1" to mutableListOf("c")))
+		val command = "insertInGroup a -> gr1\ncontentOfGroup gr1\nrollback\ncontentOfGroup gr1"
+		val output = executeCommand(database, command)
+		assertEquals("a -> b\nc -> d\nc -> d\n", output)
+	}
+
+	@Test
+	fun testRollbackEraseFromGroup() {
+		val database = Database(mutableMapOf("a" to "b", "c" to "d", "e" to "f"),
+			mutableMapOf("gr1" to mutableListOf("c")))
+		val command = "eraseFromGroup gr1 -> c\ncontentOfGroup gr1\nrollback\ncontentOfGroup gr1"
+		val output = executeCommand(database, command)
+		assertEquals("Nothing\nc -> d\n", output)
+	}
+
 	private fun executeCommand(database: Database, commands: String): String {
 		System.setIn(ByteArrayInputStream(("$commands\nexit\nN\n").toByteArray()))
 		workingProcess(database)
 		return stream.toString().trim()
 			.replace("write your command:".toRegex(), "").replace("\r", "")
 			.replace("Do you want to save data?[Y/N]", "")
+			.replace("Do you want to save data?[Y/N/Cancel]", "")
 	}
 }
