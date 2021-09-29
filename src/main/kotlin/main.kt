@@ -159,8 +159,9 @@ fun workingProcess(database: Database) {
 	while (!exit) {
 		print("write your command:")
 		val command = parseCommand(readLine()) ?: continue
-		if (!checkValidity(database, command)) {
-			println("Incorrect arguments")
+		val (isCorrect, message) = checkValidity(database, command)
+		if (!isCorrect) {
+			println(message)
 			continue
 		}
 		if (command.first in setOf(

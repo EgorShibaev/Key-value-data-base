@@ -8,33 +8,45 @@ import java.util.regex.PatternSyntaxException
 
 /**
  * This function check are arguments of commands correct.
+ * Function return Boolean value - is command correct and string - message about error.
+ * If first value are true, message should be ignored
  * */
-fun checkValidity(database: Database, command: Pair<Command, List<String>>): Boolean {
+fun checkValidity(database: Database, command: Pair<Command, List<String>>): Pair<Boolean, String> {
 	val args = command.second
 	val content = database.content
 	val groups = database.groups
 	return when (command.first) {
-		Command.INSERT -> !content.contains(args[0])
-		Command.ERASE -> content.contains(args[0])
-		Command.UPDATE -> content.contains(args[0])
-		Command.CREATE_GROUP -> !groups.contains(args[0])
-		Command.ERASE_GROUP -> groups.contains(args[0])
-		Command.INSERT_IN_GROUP ->
-			groups.contains(args[1]) && !groups.getValue(args[1]).contains(args[0]) && content.contains(args[0])
-		Command.ERASE_FROM_GROUP ->
-			groups.contains(args[0]) && groups.getValue(args[0]).contains(args[1]) && content.contains(args[1])
+		Command.INSERT -> Pair(!content.contains(args[0]), "Database has already contained this key")
+		Command.ERASE -> Pair(content.contains(args[0]), "Database does not contain this key")
+		Command.UPDATE -> Pair(content.contains(args[0]), "Database does not contain this key")
+		Command.CREATE_GROUP -> Pair(!groups.contains(args[0]), "Group with this name has already exist")
+		Command.ERASE_GROUP -> Pair(groups.contains(args[0]), "Group with this name does not exist")
+		Command.INSERT_IN_GROUP -> when {
+			!groups.contains(args[1]) -> Pair(false, "Group with this name does not exist")
+			groups.getValue(args[1]).contains(args[0]) -> Pair(false, "Group has already contain this key")
+			!content.contains(args[0]) -> Pair(false, "This key does not exist")
+			else -> Pair(true, "")
+		}
+		Command.ERASE_FROM_GROUP -> when {
+			!groups.contains(args[0]) -> Pair(false, "Group with this name does not exist")
+			!groups.getValue(args[0]).contains(args[1]) -> Pair(false, "Group does not contain this key")
+			!content.contains(args[1]) ->  Pair(false, "This key does not exist")
+			else -> Pair(true, "")
+		}
 		Command.ERASE_REGEX, Command.FIND_REGEX -> {
 			var ok = true
+			var message = ""
 			try {
 				args[0].toRegex()
 			} catch (e: PatternSyntaxException) {
 				ok = false
+				message = e.message.toString()
 			}
-			ok
+			Pair(ok, message)
 		}
-		Command.CONTENT_OF_GROUP -> groups.contains(args[0])
-		Command.FIND_IN_GROUP -> groups.contains(args[0])
-		else -> true
+		Command.CONTENT_OF_GROUP -> Pair(groups.contains(args[0]),  "Group with this name does not exist")
+		Command.FIND_IN_GROUP -> Pair(groups.contains(args[0]),  "Group with this name does not exist")
+		else -> Pair(true, "")
 	}
 }
 
