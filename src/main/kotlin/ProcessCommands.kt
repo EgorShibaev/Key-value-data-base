@@ -30,7 +30,7 @@ fun checkValidity(database: Database, command: Pair<Command, List<String>>): Pai
 		Command.ERASE_FROM_GROUP -> when {
 			!groups.contains(args[0]) -> Pair(false, "Group with this name does not exist")
 			!groups.getValue(args[0]).contains(args[1]) -> Pair(false, "Group does not contain this key")
-			!content.contains(args[1]) ->  Pair(false, "This key does not exist")
+			!content.contains(args[1]) -> Pair(false, "This key does not exist")
 			else -> Pair(true, "")
 		}
 		Command.ERASE_REGEX, Command.FIND_REGEX -> {
@@ -44,8 +44,8 @@ fun checkValidity(database: Database, command: Pair<Command, List<String>>): Pai
 			}
 			Pair(ok, message)
 		}
-		Command.CONTENT_OF_GROUP -> Pair(groups.contains(args[0]),  "Group with this name does not exist")
-		Command.FIND_IN_GROUP -> Pair(groups.contains(args[0]),  "Group with this name does not exist")
+		Command.CONTENT_OF_GROUP -> Pair(groups.contains(args[0]), "Group with this name does not exist")
+		Command.FIND_IN_GROUP -> Pair(groups.contains(args[0]), "Group with this name does not exist")
 		else -> Pair(true, "")
 	}
 }

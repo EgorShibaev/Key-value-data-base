@@ -46,8 +46,7 @@ class TestEncryptDecipher {
 		try {
 			decipher(encrypt(text, key1), key2)
 			assert(false)
-		}
-		catch (e : IllegalAccessError) {
+		} catch (e: IllegalAccessError) {
 			assert(true)
 		}
 	}

@@ -77,7 +77,7 @@ class TestWorkingProcess {
 		val cont = mutableMapOf("a" to "b", "aa" to "b")
 		val command = "createGroup gr1\ncontentOfGroup gr1\neraseGroup gr1\ncontentOfGroup gr1"
 		val output = executeCommand(Database(cont, mutableMapOf()), command)
-		assertEquals("Nothing\nIncorrect arguments\n", output)
+		assertEquals("Nothing\nGroup with this name does not exist\n", output)
 	}
 
 	@Test
@@ -178,8 +178,10 @@ class TestWorkingProcess {
 
 	@Test
 	fun testRollbackInsertInGroup() {
-		val database = Database(mutableMapOf("a" to "b", "c" to "d", "e" to "f"),
-			mutableMapOf("gr1" to mutableListOf("c")))
+		val database = Database(
+			mutableMapOf("a" to "b", "c" to "d", "e" to "f"),
+			mutableMapOf("gr1" to mutableListOf("c"))
+		)
 		val command = "insertInGroup a -> gr1\ncontentOfGroup gr1\nrollback\ncontentOfGroup gr1"
 		val output = executeCommand(database, command)
 		assertEquals("a -> b\nc -> d\nc -> d\n", output)
@@ -187,8 +189,10 @@ class TestWorkingProcess {
 
 	@Test
 	fun testRollbackEraseFromGroup() {
-		val database = Database(mutableMapOf("a" to "b", "c" to "d", "e" to "f"),
-			mutableMapOf("gr1" to mutableListOf("c")))
+		val database = Database(
+			mutableMapOf("a" to "b", "c" to "d", "e" to "f"),
+			mutableMapOf("gr1" to mutableListOf("c"))
+		)
 		val command = "eraseFromGroup gr1 -> c\ncontentOfGroup gr1\nrollback\ncontentOfGroup gr1"
 		val output = executeCommand(database, command)
 		assertEquals("Nothing\nc -> d\n", output)

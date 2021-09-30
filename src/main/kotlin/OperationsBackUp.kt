@@ -4,14 +4,14 @@
  * There is class Operation which contains nullable field of all extra classes.
  * */
 data class Operation(
-	val insertOperation: InsertOperation?,
-	val eraseOperation: EraseOperation?,
-	val clearOperation: ClearOperation?,
-	val eraseRegexOperation: EraseRegexOperation?,
-	val createGroupOperation: CreateGroupOperation?,
-	val eraseGroupOperation: EraseGroupOperation?,
-	val insertInGroupOperation: InsertInGroupOperation?,
-	val eraseFromGroupOperation: EraseFromGroupOperation?
+	val insertOperation: InsertOperation? = null,
+	val eraseOperation: EraseOperation? = null,
+	val clearOperation: ClearOperation? = null,
+	val eraseRegexOperation: EraseRegexOperation? = null,
+	val createGroupOperation: CreateGroupOperation? = null,
+	val eraseGroupOperation: EraseGroupOperation? = null,
+	val insertInGroupOperation: InsertInGroupOperation? = null,
+	val eraseFromGroupOperation: EraseFromGroupOperation? = null
 ) {
 	fun rollback(database: Database) {
 		insertOperation?.rollback(database)
@@ -42,8 +42,8 @@ data class EraseOperation(val key: String, val value: String, val namesOfGroups:
 
 data class ClearOperation(val databaseBackUp: Database) {
 	fun rollback(database: Database) {
-		database.content.putAll(HashMap(databaseBackUp.content))
-		database.groups.putAll(HashMap(databaseBackUp.groups))
+		database.content.putAll(databaseBackUp.content)
+		database.groups.putAll(databaseBackUp.groups)
 	}
 }
 
@@ -87,15 +87,16 @@ fun createOperationForCommand(database: Database, command: Pair<Command, List<St
 	val content = database.content
 	val groups = database.groups
 	return when (command.first) {
-		Command.INSERT -> Operation(InsertOperation(args[0]), null, null, null, null, null, null, null)
+		Command.INSERT -> Operation(InsertOperation(args[0]))
 		Command.ERASE -> Operation(
-			null,
-			EraseOperation(args[0], content.getValue(args[0]), groups.filter { args[0] in it.value }.keys.toList()),
-			null, null, null, null, null, null
+			eraseOperation = EraseOperation(
+				args[0],
+				content.getValue(args[0]),
+				groups.filter { args[0] in it.value }.keys.toList()
+			)
 		)
 		Command.CLEAR -> Operation(
-			null, null,
-			ClearOperation(Database(HashMap(database.content), HashMap(database.groups))), null, null, null, null, null
+			clearOperation = ClearOperation(Database(HashMap(database.content), HashMap(database.groups)))
 		)
 		Command.ERASE_REGEX -> {
 			val operation =
@@ -104,26 +105,16 @@ fun createOperationForCommand(database: Database, command: Pair<Command, List<St
 					val nameGroups = groups.filter { group -> args[0] in group.value }.keys.toList()
 					EraseOperation(it, value, nameGroups)
 				})
-			Operation(null, null, null, operation, null, null, null, null)
+			Operation(eraseRegexOperation = operation)
 		}
-		Command.CREATE_GROUP -> Operation(null, null, null, null, CreateGroupOperation(args[0]), null, null, null)
-		Command.ERASE_GROUP -> Operation(
-			null, null, null, null, null,
-			EraseGroupOperation(args[0], groups.getValue(args[0])), null, null
-		)
-		Command.INSERT_IN_GROUP -> Operation(
-			null, null, null, null, null, null,
-			InsertInGroupOperation(args[0], args[1]), null
-		)
-		Command.ERASE_FROM_GROUP -> Operation(
-			null, null, null, null, null, null, null,
-			EraseFromGroupOperation(args[1], args[0])
-		)
+		Command.CREATE_GROUP -> Operation(createGroupOperation = CreateGroupOperation(args[0]))
+		Command.ERASE_GROUP -> Operation(eraseGroupOperation = EraseGroupOperation(args[0], groups.getValue(args[0])))
+		Command.INSERT_IN_GROUP -> Operation(insertInGroupOperation = InsertInGroupOperation(args[0], args[1]))
+		Command.ERASE_FROM_GROUP -> Operation(eraseFromGroupOperation = EraseFromGroupOperation(args[1], args[0]))
 		Command.UPDATE -> Operation(
 			InsertOperation(args[0]),
-			EraseOperation(args[0], content.getValue(args[0]), groups.filter { args[0] in it.value }.keys.toList()),
-			null, null, null, null, null, null
+			EraseOperation(args[0], content.getValue(args[0]), groups.filter { args[0] in it.value }.keys.toList())
 		)
-		else -> Operation(null, null, null, null, null, null, null, null)
+		else -> Operation()
 	}
 }

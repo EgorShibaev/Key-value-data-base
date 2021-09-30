@@ -5,26 +5,26 @@
 ### Иснтрукция по использованию
 
 Комманды для работы с базой данных:
-
-- content - выводит на экран содержимое базы данных в формате key -> value.
-- insert key -> value - вставляет в базу данных пару (key, value)
-- update key -> value - изменяет значение для поля key на value
-- find key - находит значение для поля key
-- findRegex pattern - находит все ключи (и значения для них) которых соответсвуют regex.
-- erase key - удаляет поле key
-- eraseRegex pattern - удаляет все поля для которых ключ соотвтсвует regex
-- clear - очищает базу данных
-- createGroup name - создаёт группу с именем name
-- eraseGroup name - удаляет группу с именем name
-- insertInGroup key -> name - добывляет ключ key в группу name (key должен существовать в базе данных)
-- eraseFromGroup name -> key - удаляет ключ key из группы name
-- findInGroup name -> key - ищет значения для ключа key в группе name
-- contentOfGroup name - выводит содержимое группы name
-- contentOfAllGroups - выводит содержимое всех групп
-- rollback - отменяет последнюю команду
-- exit - выход
-- save - сохраняет данные в файл
-
+```
+1. content - выводит на экран содержимое базы данных в формате key -> value.
+2. insert key -> value - вставляет в базу данных пару (key, value)
+3. update key -> value - изменяет значение для поля key на value
+4. find key - находит значение для поля key
+5. findRegex pattern - находит все ключи (и значения для них) которых соответсвуют regex.
+6. erase key - удаляет поле key
+7. eraseRegex pattern - удаляет все поля для которых ключ соотвтсвует regex
+8. clear - очищает базу данных
+9. createGroup name - создаёт группу с именем name
+10. eraseGroup name - удаляет группу с именем name
+11. insertInGroup key -> name - добывляет ключ key в группу name (key должен существовать в базе данных)
+12. eraseFromGroup name -> key - удаляет ключ key из группы name
+13. findInGroup name -> key - ищет значения для ключа key в группе name
+14. contentOfGroup name - выводит содержимое группы name
+15. contentOfAllGroups - выводит содержимое всех групп
+17. rollback - отменяет последнюю команду
+18. exit - выход
+19. save - сохраняет данные в файл
+```
 База данных шифруется после каждого сохранения. Для шифровки от пользователя требуется ключ. Ключ может отличаться при
 при каждом сохранении, главное, чтобы при входе ключ совпадал с тем, который был указан при сохранении.
 
