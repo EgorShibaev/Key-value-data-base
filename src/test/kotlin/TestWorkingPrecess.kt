@@ -198,6 +198,66 @@ class TestWorkingProcess {
 		assertEquals("Nothing\nc -> d\n", output)
 	}
 
+	@Test
+	fun testIncorrectCommand() {
+		val database = Database(
+			mutableMapOf("a" to "b"),
+			mutableMapOf()
+		)
+		val command = "blablabla\nbombombom\nInsert"
+		val output = executeCommand(database, command)
+		assertEquals("Incorrect command\nIncorrect command\nIncorrect command\nMaybe you mean insert\n", output)
+	}
+
+	@Test
+	fun testWrongCountOfArguments() {
+		val database = Database(
+			mutableMapOf("a" to "b"),
+			mutableMapOf()
+		)
+		val command = "insert a"
+		val output = executeCommand(database, command)
+		assertEquals("Wrong count of arguments\n", output)
+	}
+
+	@Test
+	fun testWrongArgumentsForInsert() {
+		val database = Database(
+			mutableMapOf("a" to "b"),
+			mutableMapOf()
+		)
+		val command = "insert a -> c"
+		val output = executeCommand(database, command)
+		assertEquals("Database has already contained this key\n", output)
+	}
+
+	@Test
+	fun testWrongArgumentsForErase() {
+		val database = Database(
+			mutableMapOf("a" to "b"),
+			mutableMapOf()
+		)
+		val command = "erase b"
+		val output = executeCommand(database, command)
+		assertEquals("Database does not contain this key\n", output)
+	}
+
+	@Test
+	fun testWrongArgumentsForGroupCommands() {
+		val database = Database(
+			mutableMapOf("a" to "b"),
+			mutableMapOf("gr1" to mutableListOf("a"))
+		)
+		val command =
+			"createGroup gr1\neraseGroup gr2\ninsertInGroup a -> gr2\ninsertInGroup b -> gr1\ninsertInGroup a -> gr1"
+		val output = executeCommand(database, command)
+		assertEquals("Group with this name has already exist\n" +
+				"Group with this name does not exist\n" +
+				"Group with this name does not exist\n" +
+				"This key does not exist\n" +
+				"Group has already contained this key\n", output)
+	}
+
 	private fun executeCommand(database: Database, commands: String): String {
 		System.setIn(ByteArrayInputStream(("$commands\nexit\nN\n").toByteArray()))
 		workingProcess(database)

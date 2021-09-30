@@ -23,7 +23,7 @@ fun checkValidity(database: Database, command: Pair<Command, List<String>>): Pai
 		Command.ERASE_GROUP -> Pair(groups.contains(args[0]), "Group with this name does not exist")
 		Command.INSERT_IN_GROUP -> when {
 			!groups.contains(args[1]) -> Pair(false, "Group with this name does not exist")
-			groups.getValue(args[1]).contains(args[0]) -> Pair(false, "Group has already contain this key")
+			groups.getValue(args[1]).contains(args[0]) -> Pair(false, "Group has already contained this key")
 			!content.contains(args[0]) -> Pair(false, "This key does not exist")
 			else -> Pair(true, "")
 		}
@@ -69,7 +69,6 @@ fun processEraseCommand(database: Database, command: Pair<Command, List<String>>
 	}
 }
 
-// arguments are the same as in processEraseCommand
 fun processChangeCommand(database: Database, command: Pair<Command, List<String>>) = when (command.first) {
 	Command.INSERT -> database.content[command.second[0]] = command.second[1]
 	else -> database.content[command.second[0]] = command.second[1]

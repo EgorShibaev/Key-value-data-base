@@ -88,6 +88,11 @@ fun createOperationForCommand(database: Database, command: Pair<Command, List<St
 	val groups = database.groups
 	return when (command.first) {
 		Command.INSERT -> Operation(InsertOperation(args[0]))
+		Command.CLEAR -> Operation(clearOperation = ClearOperation(Database(HashMap(content), HashMap(groups))))
+		Command.CREATE_GROUP -> Operation(createGroupOperation = CreateGroupOperation(args[0]))
+		Command.ERASE_GROUP -> Operation(eraseGroupOperation = EraseGroupOperation(args[0], groups.getValue(args[0])))
+		Command.INSERT_IN_GROUP -> Operation(insertInGroupOperation = InsertInGroupOperation(args[0], args[1]))
+		Command.ERASE_FROM_GROUP -> Operation(eraseFromGroupOperation = EraseFromGroupOperation(args[1], args[0]))
 		Command.ERASE -> Operation(
 			eraseOperation = EraseOperation(
 				args[0],
@@ -95,22 +100,15 @@ fun createOperationForCommand(database: Database, command: Pair<Command, List<St
 				groups.filter { args[0] in it.value }.keys.toList()
 			)
 		)
-		Command.CLEAR -> Operation(
-			clearOperation = ClearOperation(Database(HashMap(database.content), HashMap(database.groups)))
-		)
-		Command.ERASE_REGEX -> {
-			val operation =
+		Command.ERASE_REGEX ->
+			Operation(
+				eraseRegexOperation =
 				EraseRegexOperation(database.content.keys.filter { it.matches(command.second[0].toRegex()) }.map {
 					val value = content.getValue(it)
 					val nameGroups = groups.filter { group -> args[0] in group.value }.keys.toList()
 					EraseOperation(it, value, nameGroups)
 				})
-			Operation(eraseRegexOperation = operation)
-		}
-		Command.CREATE_GROUP -> Operation(createGroupOperation = CreateGroupOperation(args[0]))
-		Command.ERASE_GROUP -> Operation(eraseGroupOperation = EraseGroupOperation(args[0], groups.getValue(args[0])))
-		Command.INSERT_IN_GROUP -> Operation(insertInGroupOperation = InsertInGroupOperation(args[0], args[1]))
-		Command.ERASE_FROM_GROUP -> Operation(eraseFromGroupOperation = EraseFromGroupOperation(args[1], args[0]))
+			)
 		Command.UPDATE -> Operation(
 			InsertOperation(args[0]),
 			EraseOperation(args[0], content.getValue(args[0]), groups.filter { args[0] in it.value }.keys.toList())
