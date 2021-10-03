@@ -1,5 +1,8 @@
 import java.io.File
 
+const val stringAtTheEnd = "secret word"
+const val nameOfDatabaseFile = "database"
+
 /**
  * This function and function decipher is used for encryption. Here is used encryption by permutation:
  * https://ru.wikipedia.org/wiki/%D0%9F%D0%B5%D1%80%D0%B5%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BE%D1%87%D0%BD%D1%8B%D0%B9_%D1%88%D0%B8%D1%84%D1%80
@@ -7,7 +10,7 @@ import java.io.File
  * Some text is added to end with goal check in decipher is text ends with this ending.
  * */
 fun encrypt(text: String, key: String): String {
-	val textWithCodeword = text + "secret word"
+	val textWithCodeword = text + stringAtTheEnd
 	val rows = key.length
 	// calculate count of columns the table should have
 	val columns = (textWithCodeword.length + rows - 1) / rows + 1
@@ -54,7 +57,7 @@ fun reverseSortPermutation(key: String): List<Int> {
  * Then table is read by rows and extra char on the end is deleted. Then program check
  * that word at the end equals to secret word which was added in the function encrypt.
  * */
-fun decipher(text: String, key: String): String {
+fun decipher(text: String, key: String): String? {
 	// length of text must be divided by length of key
 	if (key.isEmpty() || text.length % key.length != 0)
 		throw IllegalAccessError()
@@ -84,8 +87,8 @@ fun decipher(text: String, key: String): String {
 	while (result.isNotEmpty() && result.last() == 0.toChar())
 		result.delete(result.length - 1, result.length)
 	// check if string at the end equals string program added in encrypt
-	if (result.substring(result.length - "secret word".length) != "secret word")
-		throw IllegalAccessError()
+	if (result.substring(result.length - stringAtTheEnd.length) != stringAtTheEnd)
+		return null
 	// remove this string from the end
 	return result.removeSuffix("secret word").toString()
 }
@@ -100,8 +103,8 @@ fun decipher(text: String, key: String): String {
  * and keys on next lines.
  * On next lines there is content of database.
  * */
-fun readBase(key: String): Database {
-	val text = decipher(File("database").readText(), key)
+fun readBase(key: String): Database? {
+	val text = decipher(File(nameOfDatabaseFile).readText(), key) ?: return null
 	val lines = if (text.isNotEmpty()) text.split('\n') else listOf()
 	val result = Database(mutableMapOf(), mutableMapOf())
 	val countOfGroups = lines[0].toInt()
@@ -138,5 +141,5 @@ fun writeToBase(database: Database, key: String) {
 		result.append("${it.key}\n")
 		result.append("${it.value}\n")
 	}
-	File("database").writeText(encrypt(result.removeSuffix("\n").toString(), key))
+	File(nameOfDatabaseFile).writeText(encrypt(result.removeSuffix("\n").toString(), key))
 }

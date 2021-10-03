@@ -100,10 +100,9 @@ fun parseCommand(input: String?): Pair<Command, List<String>>? {
  * key2 -> value2
  * ...
  * */
-fun Map<String, String>.joinToString(): String {
-	val result = toSortedMap().map { "${it.key} -> ${it.value}" }.joinToString(separator = "\n")
-	return if (result == "") "Nothing" else result
-}
+fun Map<String, String>.joinToString(): String =
+	if (isEmpty()) "Nothing" else toSortedMap().map { "${it.key} -> ${it.value}" }.joinToString(separator = "\n")
+
 
 fun askKeyFromUser(): String {
 	print("Key word:")
@@ -130,15 +129,10 @@ fun greeting(): Database {
 		answer = readLine() ?: throw IllegalArgumentException("Answer hasn't been read")
 	}
 	return if (answer.lowercase() == "continue") {
-		var keyIsCorrect = false
-		var res = Database(mutableMapOf(), mutableMapOf())
-		while (!keyIsCorrect) {
-			try {
-				res = readBase(askKeyFromUser())
-				keyIsCorrect = true
-			} catch (e: IllegalAccessError) {
-				println("Wrong key.")
-			}
+		var res: Database? = readBase(askKeyFromUser())
+		while (res == null) {
+			println("Incorrect key. Try again.")
+			res = readBase(askKeyFromUser())
 		}
 		res
 	} else {

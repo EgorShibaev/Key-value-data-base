@@ -69,9 +69,8 @@ fun processEraseCommand(database: Database, command: Pair<Command, List<String>>
 	}
 }
 
-fun processChangeCommand(database: Database, command: Pair<Command, List<String>>) = when (command.first) {
-	Command.INSERT -> database.content[command.second[0]] = command.second[1]
-	else -> database.content[command.second[0]] = command.second[1]
+fun processChangeCommand(database: Database, command: Pair<Command, List<String>>) {
+	database.content[command.second[0]] = command.second[1]
 }
 
 
