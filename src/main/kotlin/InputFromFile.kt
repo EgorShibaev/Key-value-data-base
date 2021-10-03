@@ -44,7 +44,7 @@ fun cleanOutOutput(text: String): String {
 		"Wrong key. Do you want to clear database?[Y/N]\n",
 		"Choose from two option(Continue/Start):\n",
 		"write your command:",
-		"Do you want to save data?[Y/N]\n"
+		"Do you want to save data?[Y/N/Cancel]\n"
 	)
 	var result = text.replace("\r", "")
 	listOfRubbish.forEach { result = result.replace(it, "") }

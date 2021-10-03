@@ -1,8 +1,0 @@
-Start
-insert key1 -> value1
-insert key2 -> value2
-insert key3 -> value3
-content
-findRegex .*\d
-exit
-N

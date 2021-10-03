@@ -1,0 +1,17 @@
+Start
+update a -> b
+insert a -> b
+insert a -> c
+erase b
+findInGroup gr1 -> a
+createGroup gr1
+insertInGroup b -> gr1
+insertInGroup a -> gr2
+eraseFromGroup gr1 -> a
+eraseGroup gr2
+contentOfGroup gr2
+INsert a -> b
+insert a - > b
+insert a <- b
+exit
+N
