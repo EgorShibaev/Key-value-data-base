@@ -6,7 +6,10 @@ import kotlin.test.BeforeTest
 import kotlin.test.AfterTest
 import kotlin.test.assertEquals
 
-class TestWorkingProcess {
+/**
+ * These tests check the whole script
+ */
+class TestWorkingPrecess {
 	private val standardOut = System.out
 	private val standardIn = System.`in`
 	private val stream = ByteArrayOutputStream()
