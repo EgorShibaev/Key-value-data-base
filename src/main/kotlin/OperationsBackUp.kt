@@ -62,10 +62,9 @@ data class EraseFromGroupOperation(val key: String, val groupName: String) : Ope
 	}
 }
 
-data class UpdateOperation(val insertOperation: InsertOperation, val eraseOperation: EraseOperation) : Operation() {
+data class UpdateOperation(val key: String, val oldValue : String) : Operation() {
 	override fun rollback(database: Database) {
-		insertOperation.rollback(database)
-		eraseOperation.rollback(database)
+		database.content[key] = oldValue
 	}
 }
 
@@ -93,15 +92,12 @@ fun createOperationForCommand(database: Database, command: Pair<Command, List<St
 			groups.filter { args[0] in it.value }.keys.toList()
 		)
 		Command.ERASE_REGEX ->
-			EraseRegexOperation(database.content.keys.filter { it.matches(command.second[0].toRegex()) }.map {
+			EraseRegexOperation(database.content.keys.filter { it.matches(args[0].toRegex()) }.map {
 				val value = content.getValue(it)
-				val nameGroups = groups.filter { group -> args[0] in group.value }.keys.toList()
+				val nameGroups = groups.filter { group -> it in group.value }.keys.toList()
 				EraseOperation(it, value, nameGroups)
 			})
-		Command.UPDATE -> UpdateOperation(
-			InsertOperation(args[0]),
-			EraseOperation(args[0], content.getValue(args[0]), groups.filter { args[0] in it.value }.keys.toList())
-		)
+		Command.UPDATE -> UpdateOperation(args[0], content.getValue(args[0]))
 		else -> NotAChangeOperation
 	}
 }
