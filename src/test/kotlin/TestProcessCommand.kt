@@ -166,5 +166,97 @@ class TestProcessCorrectCommands {
 		)
 	}
 
+	@Test
+	fun testClearProcess() {
+		val database = Database(
+			mutableMapOf("key1" to "value1", "key2" to "value2", "key3" to "value3"),
+			mutableMapOf("group" to mutableListOf("key1", "key3"))
+		)
+		processClearCommand(database)
+		assertEquals("", getOutput())
+		assertEquals(Database(mutableMapOf(), mutableMapOf()), database)
+	}
+
+	@Test
+	fun testCreateGroupProcess() {
+		val database = Database(
+			mutableMapOf("key1" to "value1", "key2" to "value2", "key3" to "value3"),
+			mutableMapOf("group" to mutableListOf("key1", "key3"))
+		)
+		val command = Pair(Command.CREATE_GROUP, listOf("new group"))
+		processCreateGroupCommand(database, command)
+		assertEquals("", getOutput())
+		assertEquals(
+			Database(
+				mutableMapOf("key1" to "value1", "key2" to "value2", "key3" to "value3"),
+				mutableMapOf("group" to mutableListOf("key1", "key3"), "new group" to mutableListOf())
+			), database
+		)
+	}
+
+	@Test
+	fun testEraseGroupProcess() {
+		val database = Database(
+			mutableMapOf("key1" to "value1", "key2" to "value2", "key3" to "value3"),
+			mutableMapOf("group" to mutableListOf("key1", "key3"))
+		)
+		val command = Pair(Command.ERASE_GROUP, listOf("group"))
+		processEraseGroupCommand(database, command)
+		assertEquals("", getOutput())
+		assertEquals(
+			Database(
+				mutableMapOf("key1" to "value1", "key2" to "value2", "key3" to "value3"),
+				mutableMapOf()
+			), database
+		)
+	}
+
+	@Test
+	fun testInsertInGroupProcess() {
+		val database = Database(
+			mutableMapOf("key1" to "value1", "key2" to "value2", "key3" to "value3"),
+			mutableMapOf("group" to mutableListOf("key1", "key3"))
+		)
+		val command = Pair(Command.INSERT_IN_GROUP, listOf("key2", "group"))
+		processInsertInGroupCommand(database, command)
+		assertEquals("", getOutput())
+		assertEquals(
+			Database(
+				mutableMapOf("key1" to "value1", "key2" to "value2", "key3" to "value3"),
+				mutableMapOf("group" to mutableListOf("key1", "key3", "key2"))
+			), database
+		)
+	}
+
+	@Test
+	fun testEraseFromGroupProcess() {
+		val database = Database(
+			mutableMapOf("key1" to "value1", "key2" to "value2", "key3" to "value3"),
+			mutableMapOf("group" to mutableListOf("key1", "key3"))
+		)
+		val command = Pair(Command.ERASE_FROM_GROUP, listOf("group", "key1"))
+		processEraseFromGroupCommand(database, command)
+		assertEquals("", getOutput())
+		assertEquals(
+			Database(
+				mutableMapOf("key1" to "value1", "key2" to "value2", "key3" to "value3"),
+				mutableMapOf("group" to mutableListOf("key3"))
+			), database
+		)
+	}
+
+	@Test
+	fun testContentOfAllGroups() {
+		val database = Database(
+			mutableMapOf("key1" to "value1", "key2" to "value2", "key3" to "value3"),
+			mutableMapOf("group" to mutableListOf("key1", "key3"), "group2" to mutableListOf("key1"))
+		)
+		processContentOfAllGroupsCommand(database)
+		assertEquals(
+			"Name: group\nContent:\nkey1 -> value1\nkey3 -> value3\nName: group2\nContent:\nkey1 -> value1\n",
+			getOutput()
+		)
+	}
+
 	private fun getOutput() = stream.toString().replace("\r", "")
 }
