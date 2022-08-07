@@ -1,57 +1,56 @@
-# Курс основ программирования на МКН СПбГУ
+## key-value data base
 
-## Проект 2: key-value база данных
+### How to use
 
-### Иснтрукция по использованию
-
-Комманды для работы с базой данных:
+Commands for data base:
 ```
-1. content - выводит на экран содержимое базы данных в формате key -> value.
-2. insert key -> value - вставляет в базу данных пару (key, value)
-3. update key -> value - изменяет значение для поля key на value
-4. find key - находит значение для поля key
-5. findRegex pattern - находит все ключи (и значения для них) которых соответсвуют regex.
-6. erase key - удаляет поле key
-7. eraseRegex pattern - удаляет все поля для которых ключ соотвтсвует regex
-8. clear - очищает базу данных
-9. createGroup name - создаёт группу с именем name
-10. eraseGroup name - удаляет группу с именем name
-11. insertInGroup key -> name - добывляет ключ key в группу name (key должен существовать в базе данных)
-12. eraseFromGroup name -> key - удаляет ключ key из группы name
-13. findInGroup name -> key - ищет значения для ключа key в группе name
-14. contentOfGroup name - выводит содержимое группы name
-15. contentOfAllGroups - выводит содержимое всех групп
-17. rollback - отменяет последнюю команду
-18. exit - выход
-19. save - сохраняет данные в файл
+1. content - displays the content of the database in key -> value format
+2. insert key -> value - inserts a (key, value) pair into the database
+3. update key -> value - changes value of the key field to value
+4. find key - finds value for the field key
+5. findRegex pattern - finds all the keys (and their values) that match the regex pattern.
+6. erase key - deletes the key field
+7. eraseRegex pattern - removes all fields which key corresponds to the regex pattern
+8. clear - clears the database
+9. createGroup name - creates group with name
+10. eraseGroup name - deletes the group named name
+11. insertInGroup key -> name - adds the key to the name group (the key must exist in the database)
+12. eraseFromGroup name -> key - deletes the key from the group name
+13. findInGroup name -> key - searches for the values for the key in the group name
+14. contentOfGroup name - displays the content of the name group
+15. contentOfAllGroups - displays the content of all groups
+17. rollback - cancel the last command
+18. exit - exit
+19. save - saves data to a file
 ```
-База данных шифруется после каждого сохранения. Для шифровки от пользователя требуется ключ. Ключ может отличаться при
-при каждом сохранении, главное, чтобы при входе ключ совпадал с тем, который был указан при сохранении.
 
-Присутствует возможность запускать программу для работы с командами написанными в файле. Для этого требуется указать
-опцию -f (или --file) в аргументах командной строки, затем имя файла с командами, и затем (не обязательно) имя файла
-куда перенаправить вывод программы.
+The database is encrypted after each save. To encrypt the database, the user is required to provide a key. The key may be different at
+at each save, the main thing is that at login the key coincides with the one specified at the time of saving.
 
-### Принцип работы программы
+There is an opportunity to run a program to work with the commands written in the file. To do this you must specify
+option -f (or --file) in the command-line arguments, then the name of the file with the commands, and then (optionally) the name of the file
+where to redirect the output of the program.
 
-#### Общие принципы
+### The way the program works
 
-База данных хранится в файле database. При каждом запуске база данных дешифруется и загружается в оперативную память.
-Вся работа с пользователем происходит в функции workingProcess. При каждой итерации цикла происходит следующее:
-команда пользователя считывается и обрабатывается. Далее аргументы проверяются на корректность (добавляемые ключи не
-присутствуют, удаляемые присутствуют и т.д.). На следующем шаге сохраняется информация, достаточная для отката этой
-операции. Потом вызавается функция, которая обрабатывает данную команду.
+#### General principles
 
-#### Шифрование
+The database is stored in the database file. At every start-up the database is decrypted and loaded into RAM.
+All user interaction is done in the workingProcess function. At each iteration of the loop, the following happens:
+The user command is read and processed. Then the arguments are checked for correctness (the keys to be added are not
+added keys are present, deleted keys are present, etc.). At the next step, the information sufficient for rolling back that
+operation. Then a function is called that handles the given command.
 
-В программе реализован обычный алгоритм шифрования
-["перестановка по ключу"](https://neudoff.net/info/informatika/metod-shifruyushhix-tablic-s-odinochnoj-perestanovkoj-po-klyuchu/)
-Единственное добавление заключается в приписывании в конец исходного текста определённой строки и проверка после 
-расшифровки, что она осталась (улучшение заключается в том, что если ввести неправильный ключ той же длинны, то
-последняя строка будет отличаться, и программа сообщит о неправильном ключе, а не загрузит некорректные данные).
+#### Encryption
 
-### Тестирование
+The program implements the usual encryption algorithm
+["key transposition"](https://neudoff.net/info/informatika/metod-shifruyushhix-tablic-s-odinochnoj-perestanovkoj-po-klyuchu/)
+The only addition is to append a certain string to the end of the original text and check after 
+decryption that it remains (the improvement is that if the wrong key is entered of the same length, the
+the last line will be different, and the program will report the wrong key, instead of loading the incorrect data).
 
-Помимо модульного тестирования к отдельным фунциям присутствует несколько наборов входных данных в папке tests. Для
-тестирования требуется указать в параметрах командной строки "-f tests/testN/input.txt tests/testN/output.txt", где N -
-номер теста.
+### Testing
+
+In addition to unit tests to individual functions, there are several sets of input data in the tests folder. For
+tests you should specify in the command line parameters "-f tests/testN/input.txt tests/testN/output.txt", where N is
+test number.
